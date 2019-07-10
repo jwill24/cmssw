@@ -19,6 +19,7 @@ from PhysicsTools.NanoAOD.NanoAODEDMEventContent_cff import *
 from PhysicsTools.NanoAOD.protonSingleRP_cff import *
 from PhysicsTools.NanoAOD.protonMultiRP_cff import *
 from PhysicsTools.NanoAOD.ppsLocalTracks_cff import *
+from PhysicsTools.NanoAOD.lhcInfo_cff import *
 
 from Configuration.Eras.Modifier_run2_miniAOD_80XLegacy_cff import run2_miniAOD_80XLegacy
 from Configuration.Eras.Modifier_run2_nanoAOD_94X2016_cff import run2_nanoAOD_94X2016
@@ -135,10 +136,11 @@ nanoSequenceCommon = cms.Sequence(
     +jetTables 
     + muonTables + tauTables + electronTables + photonTables +  globalTables + vertexTables + metTables
     +simpleCleanerTable  
-    +isoTrackTables
     +singleRPProtonTables
     +multiRPProtonTables
     +ppsLocalTrackTables
+    +lhcInfoTables
+    +isoTrackTables
 )
 
 nanoSequenceOnlyFullSim = cms.Sequence(triggerObjectTables + l1bits)
