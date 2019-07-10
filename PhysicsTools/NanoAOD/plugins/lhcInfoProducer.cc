@@ -54,9 +54,7 @@ class lhcInfoProducer : public edm::global::EDProducer<> {
 public:
   lhcInfoProducer( edm::ParameterSet const & ps) :
     precision_( ps.getParameter<int>("precision") )
-    //lhcInfoLabel_(ps.getParameter<std::string>("lhcInfoLabel"))
   {
-    //produces<float>("xangle");
     produces<nanoaod::FlatTable>("xangle");
   }
   ~lhcInfoProducer() override {}
@@ -69,10 +67,6 @@ public:
     // Get LHCInfo handle
     edm::ESHandle<LHCInfo> lhcInfo;
     iSetup.get<LHCInfoRcd>().get(lhcInfo);
-
-    //const LHCInfo* info = lhcInfo.product();
-    //float xangle = info->crossingAngle();
-
 
     std::unique_ptr<nanoaod::FlatTable> out = fillTable(iEvent, lhcInfo);
     out->setDoc("LHC crossing angle");
@@ -87,28 +81,8 @@ public:
     const LHCInfo* info = prod.product();
     float xangle = info->crossingAngle();
 
-    /*std::vector<const T *> selobjs;
-    std::vector<edm::Ptr<T>> selptrs; // for external variables                                                                                                                                             
-    if (singleton_) {
-      assert(prod->size() == 1);
-      selobjs.push_back(& (*prod)[0] );
-      if (!extvars_.empty()) selptrs.emplace_back(prod->ptrAt(0));
-    } else {
-      for (unsigned int i = 0, n = prod->size(); i < n; ++i) {
-        const auto & obj = (*prod)[i];
-	if (cut_(obj)) {
-          selobjs.push_back(&obj);
-          if (!extvars_.empty()) selptrs.emplace_back(prod->ptrAt(i));
-	}
-        if(selobjs.size()>=maxLen_) break;
-      }
-    }
-    auto out = std::make_unique<nanoaod::FlatTable>(selobjs.size(), this->name_, singleton_, this->extension_);
-    for (const auto & var : this->vars_) var.fill(selobjs, *out);
-    for (const auto & var : this->extvars_) var.fill(iEvent, selptrs, *out);*/
-
-    auto out = std::make_unique<nanoaod::FlatTable>(1,"LHCInfo",false);
-    out.addColumnValue<float>("xangle", xangle, "LHC crossing angle", nanoaod::FlatTable::FloatColumn);
+    auto out = std::make_unique<nanoaod::FlatTable>(1,"LHCInfo",true);
+    out->addColumnValue<float>("xangle", xangle, "LHC crossing angle", nanoaod::FlatTable::FloatColumn);
 
     return out;
   }
@@ -124,7 +98,6 @@ public:
 
 protected:
   const unsigned int precision_;
-  //std::string lhcInfoLabel_;
   
 };
 

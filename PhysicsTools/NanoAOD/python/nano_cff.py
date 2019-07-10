@@ -19,7 +19,6 @@ from PhysicsTools.NanoAOD.NanoAODEDMEventContent_cff import *
 from PhysicsTools.NanoAOD.protonSingleRP_cff import *
 from PhysicsTools.NanoAOD.protonMultiRP_cff import *
 from PhysicsTools.NanoAOD.ppsLocalTracks_cff import *
-from PhysicsTools.NanoAOD.lhcInfo_cff import *
 
 from Configuration.Eras.Modifier_run2_miniAOD_80XLegacy_cff import run2_miniAOD_80XLegacy
 from Configuration.Eras.Modifier_run2_nanoAOD_94X2016_cff import run2_nanoAOD_94X2016
@@ -119,6 +118,10 @@ lheInfoTable = cms.EDProducer("LHETablesProducer",
                               storeLHEParticles = cms.bool(True) 
 )
 
+lhcInfoTable = cms.EDProducer("lhcInfoProducer",
+                              precision = cms.int32(14)
+)
+
 l1bits=cms.EDProducer("L1TriggerResultsConverter", src=cms.InputTag("gtStage2Digis"), legacyL1=cms.bool(False),
                       storeUnprefireableBit=cms.bool(True), src_ext=cms.InputTag("gtStage2Digis"))
 (run2_miniAOD_80XLegacy | run2_nanoAOD_94X2016 | run2_nanoAOD_94XMiniAODv1 | run2_nanoAOD_94XMiniAODv2 | run2_nanoAOD_102Xv1).toModify(l1bits, storeUnprefireableBit=False)
@@ -139,7 +142,7 @@ nanoSequenceCommon = cms.Sequence(
     +singleRPProtonTables
     +multiRPProtonTables
     +ppsLocalTrackTables
-    +lhcInfoTables
+    +lhcInfoTable
     +isoTrackTables
 )
 
@@ -334,8 +337,8 @@ run2_miniAOD_80XLegacy.toReplaceWith( nanoSequenceCommon, _80x_sequence)
 
 _102x_sequence = nanoSequenceCommon.copy()
 #add stuff
-_102x_sequence.insert(_102x_sequence.index(jetSequence),extraFlagsProducers102x) # removes ecalBadCalibFilter which is done in miniSequence
-#_102x_sequence.insert(_102x_sequence.index(jetSequence),extraFlagsProducers)
+_102x_sequence.insert(_102x_sequence.index(jetSequence),extraFlagsProducers102x) 
+_102x_sequence.insert(_102x_sequence.index(jetSequence),extraFlagsProducers)
 _102x_sequence.insert(_102x_sequence.index(simpleCleanerTable)+1,extraFlagsTable)
 
 for modifier in run2_nanoAOD_94XMiniAODv1, run2_nanoAOD_94XMiniAODv2, run2_nanoAOD_102Xv1:

@@ -14,7 +14,7 @@ ppsLocalTrackTable = cms.EDProducer("SimpleLocalTrackFlatTableProducer",
         x = Var("getX()",float,doc="x",precision=10),
         y = Var("getY()",float,doc="y",precision=10),
         
-        rpId = Var("getRPId()",int,doc="rpId")
+        #rpId = Var("getRPId()",int,doc="rpId")
 
     ),
 )
