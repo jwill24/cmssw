@@ -2,6 +2,12 @@ import FWCore.ParameterSet.Config as cms
 from PhysicsTools.NanoAOD.common_cff import *
 from Configuration.StandardSequences.Eras import eras
 
+
+multiRPProton = cms.EDProducer("ProtonProducer",
+                                tagRecoProtons = cms.InputTag("ctppsProtons", "multiRP"),
+                                precision = cms.int32(10),
+                            )
+
 multiRPProtonTable = cms.EDProducer("SimpleProtonTrackFlatTableProducer",
     src = cms.InputTag("ctppsProtons","multiRP"),
     cut = cms.string(""),
@@ -16,11 +22,11 @@ multiRPProtonTable = cms.EDProducer("SimpleProtonTrackFlatTableProducer",
         
         vy = Var("vy()",float,doc="vy",precision=10),
 
-        p = Var("p",float,doc="p",precision=10),
+        #p = Var("p",float,doc="p",precision=10),
         pt = Var("pt",float,doc="pt",precision=10),
         
-        thx = Var("thetaX",float,doc="th x",precision=10),
-        thy = Var("thetaY",float,doc="th y",precision=10),
+        thetaX = Var("thetaX",float,doc="th x",precision=10),
+        thetaY = Var("thetaY",float,doc="th y",precision=10),
         
         chi2 = Var("chi2",float,doc="chi 2",precision=10),
         ndof = Var("ndof()",int, doc="n dof", precision=10),
@@ -37,6 +43,10 @@ multiRPProtonTable = cms.EDProducer("SimpleProtonTrackFlatTableProducer",
         time = Var("time()",float,doc="time",precision=10),
         timeError = Var("timeError",float,doc="time Error",precision=10),        
     ),
+    externalVariables = cms.PSet(
+        sector45 = ExtVar("multiRPProton:sector45",bool,doc="LHC sector 45"),
+        sector56 = ExtVar("multiRPProton:sector56",bool,doc="LHC sector 56"),
+    ),
 )
 
 
@@ -48,6 +58,7 @@ nmuTable = cms.EDProducer("GlobalVariablesTableProducer",
 
 
 multiRPProtonTables = cms.Sequence(
+    multiRPProton +
     multiRPProtonTable +
     nmuTable 
 )

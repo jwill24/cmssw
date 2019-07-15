@@ -45,10 +45,12 @@
 class ProtonProducer : public edm::global::EDProducer<> {
 public:
   ProtonProducer( edm::ParameterSet const & ps) :
-    tokenRecoProtonsSingleRP_(consumes<reco::ForwardProtonCollection>(ps.getParameter<edm::InputTag>("tagRecoProtonsSingleRP"))),
+    tokenRecoProtons_(consumes<reco::ForwardProtonCollection>(ps.getParameter<edm::InputTag>("tagRecoProtons"))),
     precision_( ps.getParameter<int>("precision") )
   {
     produces<edm::ValueMap<int>>("protonsDetId");
+    produces<edm::ValueMap<bool>>("sector45");
+    produces<edm::ValueMap<bool>>("sector56");
   }
   ~ProtonProducer() override {}
   
@@ -59,23 +61,49 @@ public:
   void produce(edm::StreamID id, edm::Event& iEvent, const edm::EventSetup& iSetup) const override {
     
     edm::Handle<reco::ForwardProtonCollection> hRecoProtonsSingleRP;
-    iEvent.getByToken(tokenRecoProtonsSingleRP_, hRecoProtonsSingleRP);
+    iEvent.getByToken(tokenRecoProtons_, hRecoProtonsSingleRP);
 
     std::vector<int> protonsDetId;
+    std::vector<bool> sector45;
+    std::vector<bool> sector56;
+    int num_proton = hRecoProtonsSingleRP->size();
 
-    protonsDetId.reserve( hRecoProtonsSingleRP->size() );
+    protonsDetId.reserve( num_proton );
+    sector45.reserve( num_proton );
+    sector56.reserve( num_proton );
 
     for (const auto &proton : *hRecoProtonsSingleRP) {
       CTPPSDetId rpId((*proton.contributingLocalTracks().begin())->getRPId());
       protonsDetId.push_back( rpId.arm() * 100 + rpId.station() * 10 + rpId.rp() );
+
+      if (proton.pz() < 0. ) {
+	sector56.push_back( true );
+	sector45.push_back( false );
+      }
+      else if (proton.pz() > 0. ) {
+	sector45.push_back( true );
+	sector56.push_back( false );
+      }
     }
 
     std::unique_ptr<edm::ValueMap<int>> protonDetIdV(new edm::ValueMap<int>());
     edm::ValueMap<int>::Filler fillerID(*protonDetIdV);
     fillerID.insert(hRecoProtonsSingleRP, protonsDetId.begin(), protonsDetId.end());
     fillerID.fill();
+
+    std::unique_ptr<edm::ValueMap<bool>> sector45V(new edm::ValueMap<bool>());
+    edm::ValueMap<bool>::Filler filler45(*sector45V);
+    filler45.insert(hRecoProtonsSingleRP, sector45.begin(), sector45.end());
+    filler45.fill();
+
+    std::unique_ptr<edm::ValueMap<bool>> sector56V(new edm::ValueMap<bool>());
+    edm::ValueMap<bool>::Filler filler56(*sector56V);
+    filler56.insert(hRecoProtonsSingleRP, sector56.begin(), sector56.end());
+    filler56.fill();
     
     iEvent.put(std::move(protonDetIdV), "protonsDetId");
+    iEvent.put(std::move(sector45V), "sector45");
+    iEvent.put(std::move(sector56V), "sector56");
 
   }  
   
@@ -89,7 +117,7 @@ public:
   
 
 protected:
-  const edm::EDGetTokenT<reco::ForwardProtonCollection> tokenRecoProtonsSingleRP_;
+  const edm::EDGetTokenT<reco::ForwardProtonCollection> tokenRecoProtons_;
   const unsigned int precision_;
   
   
