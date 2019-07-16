@@ -84,6 +84,10 @@ public:
 	sector45.push_back( true );
 	sector56.push_back( false );
       }
+      else {
+	sector45.push_back( false );
+        sector56.push_back( false );
+      }
     }
 
     std::unique_ptr<edm::ValueMap<int>> protonDetIdV(new edm::ValueMap<int>());
