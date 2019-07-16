@@ -50,15 +50,4 @@ multiRPProtonTable = cms.EDProducer("SimpleProtonTrackFlatTableProducer",
 )
 
 
-nmuTable = cms.EDProducer("GlobalVariablesTableProducer",
-                          variables = cms.PSet(
-                              SlimmedMuonsN = ExtVar( cms.InputTag("slimmedMuons"), "candidatesize", doc = "number of of all the slimmed muons" ),
-                          )
-                      )
-
-
-multiRPProtonTables = cms.Sequence(
-    multiRPProton +
-    multiRPProtonTable +
-    nmuTable 
-)
+multiRPProtonTables = cms.Sequence( multiRPProton + multiRPProtonTable )
