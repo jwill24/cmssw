@@ -46,33 +46,42 @@ class ProtonProducer : public edm::global::EDProducer<> {
 public:
   ProtonProducer( edm::ParameterSet const & ps) :
     tokenRecoProtons_(consumes<reco::ForwardProtonCollection>(ps.getParameter<edm::InputTag>("tagRecoProtons"))),
-    precision_( ps.getParameter<int>("precision") )
+    precision_( ps.getParameter<int>("precision") ),
+    method_( ps.getParameter<std::string>("method") )
   {
     produces<edm::ValueMap<int>>("protonsDetId");
     produces<edm::ValueMap<bool>>("sector45");
     produces<edm::ValueMap<bool>>("sector56");
+    //produces<nanoaod::FlatTable>("singleRPTracks");
+    //produces<nanoaod::FlatTable>("multiRPTracks");
+    produces<nanoaod::FlatTable>("singleRPTrack");
+    produces<nanoaod::FlatTable>("multiRPTrack");
   }
   ~ProtonProducer() override {}
   
   
-  
-  
   // ------------ method called to produce the data  ------------
   void produce(edm::StreamID id, edm::Event& iEvent, const edm::EventSetup& iSetup) const override {
-    
-    edm::Handle<reco::ForwardProtonCollection> hRecoProtonsSingleRP;
-    iEvent.getByToken(tokenRecoProtons_, hRecoProtonsSingleRP);
+
+    std::cout <<"Method: " << method_ << std::endl;
+
+    // Get ForwardProton handle
+    edm::Handle<reco::ForwardProtonCollection> hRecoProtons;
+    iEvent.getByToken(tokenRecoProtons_, hRecoProtons);
 
     std::vector<int> protonsDetId;
-    std::vector<bool> sector45;
-    std::vector<bool> sector56;
-    int num_proton = hRecoProtonsSingleRP->size();
+    std::vector<bool> sector45, sector56;
+    int num_proton = hRecoProtons->size();
+    int proton_pos = 0;
+
+    std::vector<float> trackX, trackXUnc, trackY, trackYUnc, trackTime, trackTimeUnc;
+    std::vector<int> trackIdx;
 
     protonsDetId.reserve( num_proton );
     sector45.reserve( num_proton );
     sector56.reserve( num_proton );
-
-    for (const auto &proton : *hRecoProtonsSingleRP) {
+    
+    for (const auto &proton : *hRecoProtons) {
       CTPPSDetId rpId((*proton.contributingLocalTracks().begin())->getRPId());
       protonsDetId.push_back( rpId.arm() * 100 + rpId.station() * 10 + rpId.rp() );
 
@@ -88,43 +97,72 @@ public:
 	sector45.push_back( false );
         sector56.push_back( false );
       }
+
+
+    
+      for (const auto& tr : proton.contributingLocalTracks()) {
+	trackX.push_back( tr->getX() );
+	trackXUnc.push_back( tr->getXUnc() );
+	trackY.push_back( tr->getY() );
+	trackYUnc.push_back( tr->getYUnc() );
+	trackTime.push_back( tr->getTime() );
+	trackTimeUnc.push_back( tr->getTimeUnc() );
+	trackIdx.push_back( proton_pos );
+	std::cout << "Filling localTrack variables" << std::endl;
+      }
+
+      proton_pos++;
     }
 
+
+    std::cout << "Making table" << std::endl;
+    auto ppsTab = std::make_unique<nanoaod::FlatTable>(trackX.size(),Form("%sTracks",method_.c_str()),false);
+
+    std::cout << "Filling table" << std::endl;
+
+    ppsTab->addColumn<float>("trackX",trackX,"local track x",nanoaod::FlatTable::FloatColumn,precision_);
+    ppsTab->addColumn<float>("trackXUnc",trackXUnc,"local track x uncertainty",nanoaod::FlatTable::FloatColumn,precision_);
+    ppsTab->addColumn<float>("trackY",trackY,"local track y",nanoaod::FlatTable::FloatColumn,precision_);
+    ppsTab->addColumn<float>("trackYUnc",trackYUnc,"local track y uncertainty",nanoaod::FlatTable::FloatColumn,precision_);
+    ppsTab->addColumn<float>("trackTime",trackTime,"local track time",nanoaod::FlatTable::FloatColumn,precision_);
+    ppsTab->addColumn<float>("trackTimeUnc",trackTimeUnc,"local track time uncertainty",nanoaod::FlatTable::FloatColumn,precision_);
+    ppsTab->addColumn<int>("trackIdx",trackIdx,"local track - proton correspondence",nanoaod::FlatTable::IntColumn);
+    ppsTab->setDoc("ppsLocalTrack variables");
+    
     std::unique_ptr<edm::ValueMap<int>> protonDetIdV(new edm::ValueMap<int>());
     edm::ValueMap<int>::Filler fillerID(*protonDetIdV);
-    fillerID.insert(hRecoProtonsSingleRP, protonsDetId.begin(), protonsDetId.end());
+    fillerID.insert(hRecoProtons, protonsDetId.begin(), protonsDetId.end());
     fillerID.fill();
 
     std::unique_ptr<edm::ValueMap<bool>> sector45V(new edm::ValueMap<bool>());
     edm::ValueMap<bool>::Filler filler45(*sector45V);
-    filler45.insert(hRecoProtonsSingleRP, sector45.begin(), sector45.end());
+    filler45.insert(hRecoProtons, sector45.begin(), sector45.end());
     filler45.fill();
 
     std::unique_ptr<edm::ValueMap<bool>> sector56V(new edm::ValueMap<bool>());
     edm::ValueMap<bool>::Filler filler56(*sector56V);
-    filler56.insert(hRecoProtonsSingleRP, sector56.begin(), sector56.end());
+    filler56.insert(hRecoProtons, sector56.begin(), sector56.end());
     filler56.fill();
-    
+
     iEvent.put(std::move(protonDetIdV), "protonsDetId");
     iEvent.put(std::move(sector45V), "sector45");
     iEvent.put(std::move(sector56V), "sector56");
 
+    
+    iEvent.put(std::move(ppsTab),Form("%sTrack",method_.c_str()));
   }  
-  
-  // ------------ method fills 'descriptions' with the allowed parameters for the module  ------------
 
+  // ------------ method fills 'descriptions' with the allowed parameters for the module  ------------
   static void fillDescriptions(edm::ConfigurationDescriptions & descriptions) {
     edm::ParameterSetDescription desc;
     desc.setUnknown();
     descriptions.addDefault(desc);
   }
   
-
 protected:
   const edm::EDGetTokenT<reco::ForwardProtonCollection> tokenRecoProtons_;
   const unsigned int precision_;
-  
-  
+  const std::string method_;
 };
 
 
