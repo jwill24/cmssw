@@ -4,9 +4,8 @@
 // Class:      ProtonProducer
 //
 /**\class ProtonProducer ProtonProducer.cc PhysicsTools/NanoAOD/plugins/ProtonProducer.cc
- Description: [one line class summary]
+ Description: Realavent proton variables for analysis usage
  Implementation:
-     [Notes on implementation]
 */
 //
 // Original Author:  Justin Williams
@@ -52,20 +51,14 @@ public:
     produces<edm::ValueMap<int>>("protonsDetId");
     produces<edm::ValueMap<bool>>("sector45");
     produces<edm::ValueMap<bool>>("sector56");
-    //produces<nanoaod::FlatTable>("singleRPTracks");
-    //produces<nanoaod::FlatTable>("multiRPTracks");
-    produces<nanoaod::FlatTable>("singleRPTrack");
-    produces<nanoaod::FlatTable>("multiRPTrack");
+    produces<nanoaod::FlatTable>("trackTable");
   }
   ~ProtonProducer() override {}
-  
   
   // ------------ method called to produce the data  ------------
   void produce(edm::StreamID id, edm::Event& iEvent, const edm::EventSetup& iSetup) const override {
 
-    std::cout <<"Method: " << method_ << std::endl;
-
-    // Get ForwardProton handle
+    // Get Forward Proton handle
     edm::Handle<reco::ForwardProtonCollection> hRecoProtons;
     iEvent.getByToken(tokenRecoProtons_, hRecoProtons);
 
@@ -73,14 +66,13 @@ public:
     std::vector<bool> sector45, sector56;
     int num_proton = hRecoProtons->size();
     int proton_pos = 0;
-
     std::vector<float> trackX, trackXUnc, trackY, trackYUnc, trackTime, trackTimeUnc;
-    std::vector<int> trackIdx;
+    std::vector<int> trackIdx, numPlanes;
 
     protonsDetId.reserve( num_proton );
     sector45.reserve( num_proton );
     sector56.reserve( num_proton );
-    
+
     for (const auto &proton : *hRecoProtons) {
       CTPPSDetId rpId((*proton.contributingLocalTracks().begin())->getRPId());
       protonsDetId.push_back( rpId.arm() * 100 + rpId.station() * 10 + rpId.rp() );
@@ -98,8 +90,6 @@ public:
         sector56.push_back( false );
       }
 
-
-    
       for (const auto& tr : proton.contributingLocalTracks()) {
 	trackX.push_back( tr->getX() );
 	trackXUnc.push_back( tr->getXUnc() );
@@ -108,25 +98,22 @@ public:
 	trackTime.push_back( tr->getTime() );
 	trackTimeUnc.push_back( tr->getTimeUnc() );
 	trackIdx.push_back( proton_pos );
-	std::cout << "Filling localTrack variables" << std::endl;
+	numPlanes.push_back( tr->getNumberOfPointsUsedForFit() );
       }
-
       proton_pos++;
     }
 
-
-    std::cout << "Making table" << std::endl;
-    auto ppsTab = std::make_unique<nanoaod::FlatTable>(trackX.size(),Form("%sTracks",method_.c_str()),false);
-
-    std::cout << "Filling table" << std::endl;
-
-    ppsTab->addColumn<float>("trackX",trackX,"local track x",nanoaod::FlatTable::FloatColumn,precision_);
-    ppsTab->addColumn<float>("trackXUnc",trackXUnc,"local track x uncertainty",nanoaod::FlatTable::FloatColumn,precision_);
-    ppsTab->addColumn<float>("trackY",trackY,"local track y",nanoaod::FlatTable::FloatColumn,precision_);
-    ppsTab->addColumn<float>("trackYUnc",trackYUnc,"local track y uncertainty",nanoaod::FlatTable::FloatColumn,precision_);
-    ppsTab->addColumn<float>("trackTime",trackTime,"local track time",nanoaod::FlatTable::FloatColumn,precision_);
-    ppsTab->addColumn<float>("trackTimeUnc",trackTimeUnc,"local track time uncertainty",nanoaod::FlatTable::FloatColumn,precision_);
-    ppsTab->addColumn<int>("trackIdx",trackIdx,"local track - proton correspondence",nanoaod::FlatTable::IntColumn);
+    auto ppsTab = std::make_unique<nanoaod::FlatTable>(trackX.size(),Form("PPSLocalTrack_%s",method_.c_str()),false);
+    ppsTab->addColumn<float>("x",trackX,"local track x",nanoaod::FlatTable::FloatColumn,precision_);
+    ppsTab->addColumn<float>("xUnc",trackXUnc,"local track x uncertainty",nanoaod::FlatTable::FloatColumn,precision_);
+    ppsTab->addColumn<float>("y",trackY,"local track y",nanoaod::FlatTable::FloatColumn,precision_);
+    ppsTab->addColumn<float>("yUnc",trackYUnc,"local track y uncertainty",nanoaod::FlatTable::FloatColumn,precision_);
+    if ( method_ == "multiRP" ) {
+      ppsTab->addColumn<float>("time",trackTime,"local track time",nanoaod::FlatTable::FloatColumn,precision_);
+      ppsTab->addColumn<float>("timeUnc",trackTimeUnc,"local track time uncertainty",nanoaod::FlatTable::FloatColumn,precision_);
+    }
+    ppsTab->addColumn<int>("protonIdx",trackIdx,"local track - proton correspondence",nanoaod::FlatTable::IntColumn);
+    ppsTab->addColumn<int>("numPlanes",numPlanes,"number of points used for fit",nanoaod::FlatTable::IntColumn);
     ppsTab->setDoc("ppsLocalTrack variables");
     
     std::unique_ptr<edm::ValueMap<int>> protonDetIdV(new edm::ValueMap<int>());
@@ -147,9 +134,7 @@ public:
     iEvent.put(std::move(protonDetIdV), "protonsDetId");
     iEvent.put(std::move(sector45V), "sector45");
     iEvent.put(std::move(sector56V), "sector56");
-
-    
-    iEvent.put(std::move(ppsTab),Form("%sTrack",method_.c_str()));
+    iEvent.put(std::move(ppsTab),"trackTable");
   }  
 
   // ------------ method fills 'descriptions' with the allowed parameters for the module  ------------
@@ -166,5 +151,4 @@ protected:
 };
 
 
-#include "FWCore/Framework/interface/MakerMacros.h"
 DEFINE_FWK_MODULE(ProtonProducer);

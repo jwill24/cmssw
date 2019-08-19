@@ -14,7 +14,7 @@
 //
 //
 
-// system include files
+// System include files
 #include <memory>
 #include <map>
 #include <string>
@@ -49,16 +49,14 @@
 #include "CondFormats/DataRecord/interface/LHCInfoRcd.h"
 #include "CondTools/RunInfo/interface/LHCInfoPopConSourceHandler.h"
 
-
 class lhcInfoProducer : public edm::global::EDProducer<> {
 public:
   lhcInfoProducer( edm::ParameterSet const & ps) :
     precision_( ps.getParameter<int>("precision") )
   {
-    produces<nanoaod::FlatTable>("xangle");
+    produces<nanoaod::FlatTable>("lhcInfoTab");
   }
   ~lhcInfoProducer() override {}
-
 
 
   // ------------ method called to produce the data  ------------
@@ -71,19 +69,19 @@ public:
     std::unique_ptr<nanoaod::FlatTable> out = fillTable(iEvent, lhcInfo);
     out->setDoc("LHC crossing angle");
 
-    iEvent.put(std::move(out),"xangle");
+    iEvent.put(std::move(out),"lhcInfoTab");
 
   }
-
 
   std::unique_ptr<nanoaod::FlatTable> fillTable(const edm::Event &iEvent, const edm::ESHandle<LHCInfo> & prod) const {
     
     const LHCInfo* info = prod.product();
     float xangle = info->crossingAngle();
+    float betaStar = info->betaStar();
 
     auto out = std::make_unique<nanoaod::FlatTable>(1,"LHCInfo",true);
     out->addColumnValue<float>("xangle", xangle, "LHC crossing angle", nanoaod::FlatTable::FloatColumn);
-
+    out->addColumnValue<float>("betaStar",betaStar,"LHC beta star", nanoaod::FlatTable::FloatColumn);
     return out;
   }
 
@@ -95,12 +93,9 @@ public:
     descriptions.addDefault(desc);
   }
 
-
 protected:
   const unsigned int precision_;
-  
 };
 
 
-#include "FWCore/Framework/interface/MakerMacros.h"
 DEFINE_FWK_MODULE(lhcInfoProducer);

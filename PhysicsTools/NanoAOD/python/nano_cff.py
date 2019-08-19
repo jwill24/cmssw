@@ -16,9 +16,6 @@ from PhysicsTools.NanoAOD.met_cff import *
 from PhysicsTools.NanoAOD.triggerObjects_cff import *
 from PhysicsTools.NanoAOD.isotracks_cff import *
 from PhysicsTools.NanoAOD.NanoAODEDMEventContent_cff import *
-#from PhysicsTools.NanoAOD.protonSingleRP_cff import *
-#from PhysicsTools.NanoAOD.protonMultiRP_cff import *
-#from PhysicsTools.NanoAOD.ppsLocalTracks_cff import *
 from PhysicsTools.NanoAOD.protons_cff import *
 
 
@@ -120,22 +117,9 @@ lheInfoTable = cms.EDProducer("LHETablesProducer",
                               storeLHEParticles = cms.bool(True) 
 )
 
-#singleRPProtons = cms.EDProducer("ProtonProducer",
-#                                tagRecoProtons = cms.InputTag("ctppsProtons", "singleRP"),
-#                                precision = cms.int32(10),
-#                                method = cms.string('singleRP')
-#)
-
-#multiRPProtons = cms.EDProducer("ProtonProducer",
-#                                tagRecoProtons = cms.InputTag("ctppsProtons", "multiRP"),
-#                                precision = cms.int32(10),
-#                                method = cms.string('multiRP'),
-#)
-
-
-
 lhcInfoTable = cms.EDProducer("lhcInfoProducer",
-                              precision = cms.int32(14)
+                              precision = cms.int32(14),
+                              tagRecoProtons = cms.InputTag("ctppsProtons", "singleRP")
 )
 
 l1bits=cms.EDProducer("L1TriggerResultsConverter", src=cms.InputTag("gtStage2Digis"), legacyL1=cms.bool(False),
@@ -155,13 +139,8 @@ nanoSequenceCommon = cms.Sequence(
     +jetTables 
     + muonTables + tauTables + electronTables + photonTables +  globalTables + vertexTables + metTables
     +simpleCleanerTable  
-    #+singleRPProtonTables
-    #+multiRPProtonTables
-    #+ppsLocalTrackTables
     +protonTables
     +lhcInfoTable
-    #+singleRPProtons
-    #+multiRPProtons
     +isoTrackTables
 )
 
