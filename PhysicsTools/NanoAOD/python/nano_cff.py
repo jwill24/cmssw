@@ -142,7 +142,6 @@ nanoSequenceCommon = cms.Sequence(
     +lhcInfoTable
     +isoTrackTables
 )
-
 nanoSequenceOnlyFullSim = cms.Sequence(triggerObjectTables + l1bits)
 
 nanoSequence = cms.Sequence(nanoSequenceCommon + nanoSequenceOnlyFullSim)
@@ -351,7 +350,6 @@ run2_miniAOD_80XLegacy.toReplaceWith( nanoSequenceCommon, _80x_sequence)
 _102x_sequence = nanoSequenceCommon.copy()
 #add stuff
 _102x_sequence.insert(_102x_sequence.index(jetSequence),extraFlagsProducers102x) 
-_102x_sequence.insert(_102x_sequence.index(jetSequence),extraFlagsProducers)
 _102x_sequence.insert(_102x_sequence.index(simpleCleanerTable)+1,extraFlagsTable)
 
 for modifier in run2_nanoAOD_94XMiniAODv1, run2_nanoAOD_94XMiniAODv2, run2_nanoAOD_102Xv1:
