@@ -100,7 +100,6 @@ public:
 	trackTimeUnc.push_back( tr->getTimeUnc() );
 	trackIdx.push_back( proton_pos );
 	numPlanes.push_back( tr->getNumberOfPointsUsedForFit() );
-	std::cout << "Reco info: " << static_cast<int>(tr->getPixelTrackRecoInfo()) << std::endl;
 	pixelRecoInfo.push_back( static_cast<int>(tr->getPixelTrackRecoInfo()) );
       }
       proton_pos++;
