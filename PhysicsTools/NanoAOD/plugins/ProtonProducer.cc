@@ -39,7 +39,7 @@
 #include "DataFormats/CTPPSReco/interface/CTPPSLocalTrackLite.h"
 #include "DataFormats/ProtonReco/interface/ForwardProton.h"
 #include "DataFormats/ProtonReco/interface/ForwardProtonFwd.h"
-
+#include "DataFormats/CTPPSReco/interface/CTPPSPixelLocalTrack.h"
 
 class ProtonProducer : public edm::global::EDProducer<> {
 public:
@@ -68,6 +68,7 @@ public:
     int proton_pos = 0;
     std::vector<float> trackX, trackXUnc, trackY, trackYUnc, trackTime, trackTimeUnc;
     std::vector<int> trackIdx, numPlanes;
+    std::vector<int> pixelRecoInfo;
 
     protonsDetId.reserve( num_proton );
     sector45.reserve( num_proton );
@@ -99,9 +100,12 @@ public:
 	trackTimeUnc.push_back( tr->getTimeUnc() );
 	trackIdx.push_back( proton_pos );
 	numPlanes.push_back( tr->getNumberOfPointsUsedForFit() );
+	std::cout << "Reco info: " << static_cast<int>(tr->getPixelTrackRecoInfo()) << std::endl;
+	pixelRecoInfo.push_back( static_cast<int>(tr->getPixelTrackRecoInfo()) );
       }
       proton_pos++;
     }
+
 
     auto ppsTab = std::make_unique<nanoaod::FlatTable>(trackX.size(),Form("PPSLocalTrack_%s",method_.c_str()),false);
     ppsTab->addColumn<float>("x",trackX,"local track x",nanoaod::FlatTable::FloatColumn,precision_);
@@ -114,6 +118,7 @@ public:
     }
     ppsTab->addColumn<int>("protonIdx",trackIdx,"local track - proton correspondence",nanoaod::FlatTable::IntColumn);
     ppsTab->addColumn<int>("numPlanes",numPlanes,"number of points used for fit",nanoaod::FlatTable::IntColumn);
+    ppsTab->addColumn<int>("pixelRecoInfo",pixelRecoInfo,"flag if a ROC was shifted by a bunchx",nanoaod::FlatTable::IntColumn);
     ppsTab->setDoc("ppsLocalTrack variables");
     
     std::unique_ptr<edm::ValueMap<int>> protonDetIdV(new edm::ValueMap<int>());
