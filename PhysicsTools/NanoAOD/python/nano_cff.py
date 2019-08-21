@@ -118,8 +118,7 @@ lheInfoTable = cms.EDProducer("LHETablesProducer",
 )
 
 lhcInfoTable = cms.EDProducer("lhcInfoProducer",
-                              precision = cms.int32(14),
-                              tagRecoProtons = cms.InputTag("ctppsProtons", "singleRP")
+                              precision = cms.int32(10),
 )
 
 l1bits=cms.EDProducer("L1TriggerResultsConverter", src=cms.InputTag("gtStage2Digis"), legacyL1=cms.bool(False),

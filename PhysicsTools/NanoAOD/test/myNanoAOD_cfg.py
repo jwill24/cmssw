@@ -21,11 +21,11 @@ from Configuration.AlCa.GlobalTag import GlobalTag
 process.GlobalTag = GlobalTag(process.GlobalTag, '106X_dataRun2_v11', '')
 
 process.maxEvents = cms.untracked.PSet(
-    input = cms.untracked.int32(100)
+    input = cms.untracked.int32(10)
 )
 
 process.source = cms.Source("PoolSource",
-                            fileNames = cms.untracked.vstring('file:miniAOD-prod_PAT.root'),
+                            fileNames = cms.untracked.vstring('file:mini10k.root'),
                             secondaryFileNames = cms.untracked.vstring()
                         )
 
@@ -50,6 +50,8 @@ process.NANOAODoutput = cms.OutputModule("NanoAODOutputModule",
     fileName = cms.untracked.string('myNanoProdData_NANO.root'),
     outputCommands = process.NANOAODEventContent.outputCommands
 )
+
+#process.Tracer = cms.Service("Tracer")
 
 process.nanoAOD_step = cms.Path(process.nanoSequence)
 process.endjob_step = cms.EndPath(process.endOfProcess)
