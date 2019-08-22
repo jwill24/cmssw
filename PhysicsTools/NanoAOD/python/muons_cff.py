@@ -133,9 +133,6 @@ muonTable = cms.EDProducer("SimpleCandidateFlatTableProducer",
         softMvaId = Var("passed('SoftMvaId')",bool,doc="soft MVA ID"),
         softMva = Var("softMvaValue()",float,doc="soft MVA ID score",precision=6),
         highPtId = Var("?passed('CutBasedIdGlobalHighPt')?2:passed('CutBasedIdTrkHighPt')","uint8",doc="high-pT cut-based ID (1 = tracker high pT, 2 = global high pT, which includes tracker high pT)"),
-        #pvNDOF = Var("sourceCandidatePtr(0).vertexRef().ndof() ",int,doc="pv ref nDOF"),
-        #pvRefDz = Var("sourceCandidatePtr(0).dzAssociatedPV() ",float ,doc="pv ref dz"),
-        #pvRefKey = Var("sourceCandidatePtr(0).vertexRef().key() ",int,doc="pv ref KEY"),
         pfIsoId = Var("passed('PFIsoVeryLoose')+passed('PFIsoLoose')+passed('PFIsoMedium')+passed('PFIsoTight')+passed('PFIsoVeryTight')+passed('PFIsoVeryVeryTight')","uint8",doc="PFIso ID from miniAOD selector (1=PFIsoVeryLoose, 2=PFIsoLoose, 3=PFIsoMedium, 4=PFIsoTight, 5=PFIsoVeryTight, 6=PFIsoVeryVeryTight)"),
         tkIsoId = Var("?passed('TkIsoTight')?2:passed('TkIsoLoose')","uint8",doc="TkIso ID (1=TkIsoLoose, 2=TkIsoTight)"),
         mvaId = Var("passed('MvaLoose')+passed('MvaMedium')+passed('MvaTight')","uint8",doc="Mva ID from miniAOD selector (1=MvaLoose, 2=MvaMedium, 3=MvaTight)"),
@@ -179,14 +176,7 @@ muonMCTable = cms.EDProducer("CandMCMatchTableProducer",
     docString = cms.string("MC matching to status==1 muons"),
 )
 
-nmuTable = cms.EDProducer("GlobalVariablesTableProducer",
-                          variables = cms.PSet(
-                              SlimmedMuonsN = ExtVar( cms.InputTag("slimmedMuons"), "candidatesize", doc = "number of of all the slimmed muons" ),
-                          )
-                      )
-
-
-muonSequence = cms.Sequence(isoForMu + ptRatioRelForMu + slimmedMuonsWithUserData + finalMuons + finalLooseMuons + nmuTable)
+muonSequence = cms.Sequence(isoForMu + ptRatioRelForMu + slimmedMuonsWithUserData + finalMuons + finalLooseMuons )
 muonMC = cms.Sequence(muonsMCMatchForTable + muonMCTable)
 muonTables = cms.Sequence(muonMVATTH + muonMVALowPt + muonTable)
 

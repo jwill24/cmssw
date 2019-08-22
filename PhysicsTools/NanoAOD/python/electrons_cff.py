@@ -252,7 +252,7 @@ for modifier in run2_nanoAOD_94XMiniAODv1,run2_nanoAOD_94XMiniAODv2,run2_nanoAOD
 
 
 #the94X miniAOD V2 had a bug in the scale and smearing for electrons in the E/p comb
-#therefore we redo it but but we need to use a new name for the userFloat as we cant override existing userfloats
+#therefore we redo it but but we need use a new name for the userFloat as we cant override existing userfloats
 #for technical reasons
 run2_nanoAOD_94XMiniAODv2.toModify(slimmedElectronsWithUserData.userFloats,
     ecalTrkEnergyErrPostCorrNew = cms.InputTag("calibratedPatElectrons94X","ecalTrkEnergyErrPostCorr"),
@@ -410,7 +410,7 @@ for modifier in run2_nanoAOD_94X2016,:
     )
 
 #the94X miniAOD V2 had a bug in the scale and smearing for electrons in the E/p comb
-#therefore we redo it but but we need to use a new name for the userFloat as we cant override existing userfloats
+#therefore we redo it but but we need use a new name for the userFloat as we cant override existing userfloats
 #for technical reasons
 for modifier in run2_nanoAOD_94XMiniAODv1,run2_nanoAOD_94XMiniAODv2,run2_miniAOD_80XLegacy,run2_nanoAOD_102Xv1:
     modifier.toModify(electronTable.variables,            
@@ -480,15 +480,11 @@ electronMCTable = cms.EDProducer("CandMCMatchTableProducer",
     docString = cms.string("MC matching to status==1 electrons or photons"),
 )
 
-electronSequence = cms.Sequence(bitmapVIDForEle +  # FIXME: Works without this. Maybe it's redundant for miniSequence?
-    isoForEle + ptRatioRelForEle + seedGainEle + slimmedElectronsWithUserData + finalElectrons)
+electronSequence = cms.Sequence(bitmapVIDForEle + isoForEle + ptRatioRelForEle + seedGainEle + slimmedElectronsWithUserData + finalElectrons)
 electronTables = cms.Sequence (electronMVATTH + electronTable)
 electronMC = cms.Sequence(electronsMCMatchForTable + electronMCTable)
 from RecoEgamma.ElectronIdentification.heepIdVarValueMapProducer_cfi import heepIDVarValueMaps
-# FIXME: Testing
-_updateTo106X_sequence =cms.Sequence(heepIDVarValueMaps 
-                                     + slimmedElectronsTo106X
-)
+_updateTo106X_sequence =cms.Sequence(heepIDVarValueMaps + slimmedElectronsTo106X)
 heepIDVarValueMaps.dataFormat = 2
 
 _withUpdate_sequence = cms.Sequence(_updateTo106X_sequence + slimmedElectronsUpdated + electronSequence.copy())

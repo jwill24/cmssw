@@ -486,7 +486,7 @@ genJetTable = cms.EDProducer("SimpleCandidateFlatTableProducer",
 	#anything else?
     )
 )
-patJetPartonsNano = cms.EDProducer('HadronAndPartonSelector',
+patJetPartons = cms.EDProducer('HadronAndPartonSelector',
     src = cms.InputTag("generator"),
     particles = cms.InputTag("prunedGenParticles"),
     partonMode = cms.string("Auto"),
@@ -494,10 +494,10 @@ patJetPartonsNano = cms.EDProducer('HadronAndPartonSelector',
 )
 genJetFlavourAssociation = cms.EDProducer("JetFlavourClustering",
     jets = genJetTable.src,
-    bHadrons = cms.InputTag("patJetPartonsNano","bHadrons"),
-    cHadrons = cms.InputTag("patJetPartonsNano","cHadrons"),
-    partons = cms.InputTag("patJetPartonsNano","physicsPartons"),
-    leptons = cms.InputTag("patJetPartonsNano","leptons"),
+    bHadrons = cms.InputTag("patJetPartons","bHadrons"),
+    cHadrons = cms.InputTag("patJetPartons","cHadrons"),
+    partons = cms.InputTag("patJetPartons","physicsPartons"),
+    leptons = cms.InputTag("patJetPartons","leptons"),
     jetAlgorithm = cms.string("AntiKt"),
     rParam = cms.double(0.4),
     ghostRescaling = cms.double(1e-18),
@@ -524,10 +524,10 @@ genJetAK8Table = cms.EDProducer("SimpleCandidateFlatTableProducer",
 )
 genJetAK8FlavourAssociation = cms.EDProducer("JetFlavourClustering",
     jets = genJetAK8Table.src,
-    bHadrons = cms.InputTag("patJetPartonsNano","bHadrons"),
-    cHadrons = cms.InputTag("patJetPartonsNano","cHadrons"),
-    partons = cms.InputTag("patJetPartonsNano","physicsPartons"),
-    leptons = cms.InputTag("patJetPartonsNano","leptons"),
+    bHadrons = cms.InputTag("patJetPartons","bHadrons"),
+    cHadrons = cms.InputTag("patJetPartons","cHadrons"),
+    partons = cms.InputTag("patJetPartons","physicsPartons"),
+    leptons = cms.InputTag("patJetPartons","leptons"),
     jetAlgorithm = cms.string("AntiKt"),
     rParam = cms.double(0.8),
     ghostRescaling = cms.double(1e-18),
@@ -558,27 +558,7 @@ from RecoJets.JetProducers.QGTagger_cfi import  QGTagger
 qgtagger=QGTagger.clone(srcJets="updatedJets",srcVertexCollection="offlineSlimmedPrimaryVertices")
 
 #before cross linking
-jetSequence = cms.Sequence(jetCorrFactorsNano
-                           +updatedJets
-                           +tightJetId
-                           +tightJetIdLepVeto
-                           +bJetVars
-                           +jercVars
-                           +qgtagger
-                           +updatedJetsWithUserData
-                           +jetCorrFactorsAK8
-                           +updatedJetsAK8
-                           +tightJetIdAK8
-                           +tightJetIdLepVetoAK8
-                           +updatedJetsAK8WithUserData
-                           +chsForSATkJets
-                           +softActivityJets
-                           +softActivityJets2
-                           +softActivityJets5
-                           +softActivityJets10
-                           +finalJets
-                           +finalJetsAK8
-)
+jetSequence = cms.Sequence(jetCorrFactorsNano+updatedJets+tightJetId+tightJetIdLepVeto+bJetVars+jercVars+qgtagger+updatedJetsWithUserData+jetCorrFactorsAK8+updatedJetsAK8+tightJetIdAK8+tightJetIdLepVetoAK8+updatedJetsAK8WithUserData+chsForSATkJets+softActivityJets+softActivityJets2+softActivityJets5+softActivityJets10+finalJets+finalJetsAK8)
 
 _jetSequence_2016 = jetSequence.copy()
 _jetSequence_2016.insert(_jetSequence_2016.index(tightJetId), looseJetId)
@@ -590,7 +570,7 @@ for modifier in run2_miniAOD_80XLegacy, run2_nanoAOD_94X2016:
 jetTables = cms.Sequence(bjetMVA+bjetNN+jetTable+fatJetTable+subJetTable+saJetTable+saTable)
 
 #MC only producers and tables
-jetMC = cms.Sequence(jetMCTable+genJetTable+patJetPartonsNano+genJetFlavourTable+genJetAK8Table+genJetAK8FlavourAssociation+genJetAK8FlavourTable+genSubJetAK8Table)
+jetMC = cms.Sequence(jetMCTable+genJetTable+patJetPartons+genJetFlavourTable+genJetAK8Table+genJetAK8FlavourAssociation+genJetAK8FlavourTable+genSubJetAK8Table)
 _jetMC_pre94X = jetMC.copy()
 _jetMC_pre94X.insert(_jetMC_pre94X.index(genJetFlavourTable),genJetFlavourAssociation)
 _jetMC_pre94X.remove(genSubJetAK8Table)
