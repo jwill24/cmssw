@@ -48,7 +48,7 @@ public:
     precision_( ps.getParameter<int>("precision") ),
     method_( ps.getParameter<std::string>("method") )
   {
-    produces<edm::ValueMap<int>>("protonsDetId");
+    produces<edm::ValueMap<int>>("protonRPId");
     produces<edm::ValueMap<bool>>("sector45");
     produces<edm::ValueMap<bool>>("sector56");
     produces<nanoaod::FlatTable>("trackTable");
@@ -62,7 +62,7 @@ public:
     edm::Handle<reco::ForwardProtonCollection> hRecoProtons;
     iEvent.getByToken(tokenRecoProtons_, hRecoProtons);
 
-    std::vector<int> protonsDetId;
+    std::vector<int> protonRPId;
     std::vector<bool> sector45, sector56;
     int num_proton = hRecoProtons->size();
     int proton_pos = 0;
@@ -70,13 +70,13 @@ public:
     std::vector<int> trackIdx, numPlanes;
     std::vector<int> pixelRecoInfo;
 
-    protonsDetId.reserve( num_proton );
+    protonRPId.reserve( num_proton );
     sector45.reserve( num_proton );
     sector56.reserve( num_proton );
 
     for (const auto &proton : *hRecoProtons) {
       CTPPSDetId rpId((*proton.contributingLocalTracks().begin())->getRPId());
-      protonsDetId.push_back( rpId.arm() * 100 + rpId.station() * 10 + rpId.rp() );
+      protonRPId.push_back( rpId.arm() * 100 + rpId.station() * 10 + rpId.rp() );
 
       if (proton.pz() < 0. ) {
 	sector56.push_back( true );
@@ -120,9 +120,9 @@ public:
     ppsTab->addColumn<int>("pixelRecoInfo",pixelRecoInfo,"flag if a ROC was shifted by a bunchx",nanoaod::FlatTable::IntColumn);
     ppsTab->setDoc("ppsLocalTrack variables");
     
-    std::unique_ptr<edm::ValueMap<int>> protonDetIdV(new edm::ValueMap<int>());
-    edm::ValueMap<int>::Filler fillerID(*protonDetIdV);
-    fillerID.insert(hRecoProtons, protonsDetId.begin(), protonsDetId.end());
+    std::unique_ptr<edm::ValueMap<int>> protonRPIdV(new edm::ValueMap<int>());
+    edm::ValueMap<int>::Filler fillerID(*protonRPIdV);
+    fillerID.insert(hRecoProtons, protonRPId.begin(), protonRPId.end());
     fillerID.fill();
 
     std::unique_ptr<edm::ValueMap<bool>> sector45V(new edm::ValueMap<bool>());
@@ -135,10 +135,10 @@ public:
     filler56.insert(hRecoProtons, sector56.begin(), sector56.end());
     filler56.fill();
 
-    iEvent.put(std::move(protonDetIdV), "protonsDetId");
+    iEvent.put(std::move(protonRPIdV), "protonRPId");
     iEvent.put(std::move(sector45V), "sector45");
     iEvent.put(std::move(sector56V), "sector56");
-    iEvent.put(std::move(ppsTab),"trackTable");
+    iEvent.put(std::move(ppsTab), "trackTable");
   }  
 
   // ------------ method fills 'descriptions' with the allowed parameters for the module  ------------
