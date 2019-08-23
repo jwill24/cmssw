@@ -12,10 +12,11 @@
 #include <boost/ptr_container/ptr_vector.hpp>
 
 template<typename T, typename TProd>
-  class SimpleFlatTableProducerBase : public edm::stream::EDProducer<> {
- public:
+class SimpleFlatTableProducerBase : public edm::stream::EDProducer<> {
+    public:
+ 
+        SimpleFlatTableProducerBase( edm::ParameterSet const & params ):
 
- SimpleFlatTableProducerBase( edm::ParameterSet const & params ):
   name_( params.getParameter<std::string>("name") ),
     doc_(params.existsAs<std::string>("doc") ? params.getParameter<std::string>("doc") : ""),
     extension_(params.existsAs<bool>("extension") ? params.getParameter<bool>("extension") : false),
