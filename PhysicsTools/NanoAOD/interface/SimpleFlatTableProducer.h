@@ -17,9 +17,9 @@ class SimpleFlatTableProducerBase : public edm::stream::EDProducer<> {
 
         SimpleFlatTableProducerBase( edm::ParameterSet const & params ):
             name_( params.getParameter<std::string>("name") ),
-	    doc_(params.existsAs<std::string>("doc") ? params.getParameter<std::string>("doc") : ""),
-	    extension_(params.existsAs<bool>("extension") ? params.getParameter<bool>("extension") : false),
-	    src_(consumes<TProd>( params.getParameter<edm::InputTag>("src") )) 
+	     doc_(params.existsAs<std::string>("doc") ? params.getParameter<std::string>("doc") : ""),
+	     extension_(params.existsAs<bool>("extension") ? params.getParameter<bool>("extension") : false),
+	     src_(consumes<TProd>( params.getParameter<edm::InputTag>("src") )) 
 	{
 	    edm::ParameterSet const & varsPSet = params.getParameter<edm::ParameterSet>("variables");
 	    for (const std::string & vname : varsPSet.getParameterNamesForType<edm::ParameterSet>()) {
