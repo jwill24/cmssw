@@ -176,7 +176,7 @@ muonMCTable = cms.EDProducer("CandMCMatchTableProducer",
     docString = cms.string("MC matching to status==1 muons"),
 )
 
-muonSequence = cms.Sequence(isoForMu + ptRatioRelForMu + slimmedMuonsWithUserData + finalMuons + finalLooseMuons )
+muonSequence = cms.Sequence(isoForMu + ptRatioRelForMu + slimmedMuonsWithUserData + finalMuons + finalLooseMuons)
 muonMC = cms.Sequence(muonsMCMatchForTable + muonMCTable)
 muonTables = cms.Sequence(muonMVATTH + muonMVALowPt + muonTable)
 
