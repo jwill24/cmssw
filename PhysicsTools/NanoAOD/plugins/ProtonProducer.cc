@@ -49,7 +49,7 @@ public:
     method_( ps.getParameter<std::string>("method") )
   {
     produces<edm::ValueMap<int>>("protonRPId");
-    produces<edm::ValueMap<int>>("subDetId");
+    produces<edm::ValueMap<int>>("protonRPType");
     produces<edm::ValueMap<bool>>("sector45");
     produces<edm::ValueMap<bool>>("sector56");
     produces<nanoaod::FlatTable>("trackTable");
@@ -63,7 +63,7 @@ public:
     edm::Handle<reco::ForwardProtonCollection> hRecoProtons;
     iEvent.getByToken(tokenRecoProtons_, hRecoProtons);
 
-    std::vector<int> protonRPId, subDetId;
+    std::vector<int> protonRPId, protonRPType;
     std::vector<bool> sector45, sector56;
     int num_proton = hRecoProtons->size();
     int proton_pos = 0;
@@ -77,7 +77,7 @@ public:
     for (const auto &proton : *hRecoProtons) {
       CTPPSDetId rpId((*proton.contributingLocalTracks().begin())->getRPId());
       protonRPId.push_back( rpId.arm() * 100 + rpId.station() * 10 + rpId.rp() );
-      subDetId.push_back( rpId.subdetId() );
+      protonRPType.push_back( rpId.subdetId() );
 
       if (proton.pz() < 0. ) {
 	sector56.push_back( true );
@@ -125,9 +125,9 @@ public:
     fillerID.insert(hRecoProtons, protonRPId.begin(), protonRPId.end());
     fillerID.fill();
 
-    std::unique_ptr<edm::ValueMap<int>> subDetIdV(new edm::ValueMap<int>());
-    edm::ValueMap<int>::Filler fillerSubID(*subDetIdV);
-    fillerSubID.insert(hRecoProtons, subDetId.begin(), subDetId.end());
+    std::unique_ptr<edm::ValueMap<int>> protonRPTypeV(new edm::ValueMap<int>());
+    edm::ValueMap<int>::Filler fillerSubID(*protonRPTypeV);
+    fillerSubID.insert(hRecoProtons, protonRPType.begin(), protonRPType.end());
     fillerSubID.fill();
 
     std::unique_ptr<edm::ValueMap<bool>> sector45V(new edm::ValueMap<bool>());
@@ -141,7 +141,7 @@ public:
     filler56.fill();
 
     iEvent.put(std::move(protonRPIdV), "protonRPId");
-    iEvent.put(std::move(subDetIdV), "subDetId");
+    iEvent.put(std::move(protonRPTypeV), "protonRPType");
     iEvent.put(std::move(sector45V), "sector45");
     iEvent.put(std::move(sector56V), "sector56");
     iEvent.put(std::move(ppsTab), "trackTable");
