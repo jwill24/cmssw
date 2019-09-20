@@ -91,8 +91,6 @@ for modifier in run2_miniAOD_80XLegacy, run2_nanoAOD_94X2016: # to be updated wh
             btagSFdir+"cMVAv2_Moriond17_B_H.csv"                                            
         )
     )
-    
-    
 genWeightsTable = cms.EDProducer("GenWeightsTableProducer",
     genEvent = cms.InputTag("generator"),
     lheInfo = cms.VInputTag(cms.InputTag("externalLHEProducer"), cms.InputTag("source")),
@@ -116,7 +114,7 @@ lheInfoTable = cms.EDProducer("LHETablesProducer",
     storeLHEParticles = cms.bool(True) 
 )
 
-lhcInfoTable = cms.EDProducer("lhcInfoProducer",
+lhcInfoTable = cms.EDProducer("LHCInfoProducer",
                               precision = cms.int32(10),
 )
 
@@ -128,9 +126,7 @@ nanoSequenceCommon = cms.Sequence(
     nanoMetadata + jetSequence + muonSequence + tauSequence + electronSequence+photonSequence+vertexSequence+
     isoTrackSequence +# must be after all the leptons 
     linkedObjects +
-    jetTables + muonTables + tauTables + electronTables + photonTables +  globalTables +vertexTables+ metTables+simpleCleanerTable +isoTrackTables
-    +protonTables
-    +lhcInfoTable
+    jetTables + muonTables + tauTables + electronTables + photonTables +  globalTables +vertexTables+ metTables+simpleCleanerTable +isoTrackTables +protonTables +lhcInfoTable
     )
 nanoSequenceOnlyFullSim = cms.Sequence(triggerObjectTables + l1bits)
 
