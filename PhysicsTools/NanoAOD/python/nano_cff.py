@@ -16,6 +16,7 @@ from PhysicsTools.NanoAOD.met_cff import *
 from PhysicsTools.NanoAOD.triggerObjects_cff import *
 from PhysicsTools.NanoAOD.isotracks_cff import *
 from PhysicsTools.NanoAOD.NanoAODEDMEventContent_cff import *
+from PhysicsTools.NanoAOD.protons_cff import *
 
 from Configuration.Eras.Modifier_run2_miniAOD_80XLegacy_cff import run2_miniAOD_80XLegacy
 from Configuration.Eras.Modifier_run2_nanoAOD_94X2016_cff import run2_nanoAOD_94X2016
@@ -118,6 +119,10 @@ lheInfoTable = cms.EDProducer("LHETablesProducer",
     storeLHEParticles = cms.bool(True) 
 )
 
+lhcInfoTable = cms.EDProducer("LHCInfoProducer",
+                              precision = cms.int32(10),
+)
+
 l1bits=cms.EDProducer("L1TriggerResultsConverter", src=cms.InputTag("gtStage2Digis"), legacyL1=cms.bool(False),
                       storeUnprefireableBit=cms.bool(True), src_ext=cms.InputTag("gtStage2Digis"))
 (run2_miniAOD_80XLegacy | run2_nanoAOD_94X2016 | run2_nanoAOD_94XMiniAODv1 | run2_nanoAOD_94XMiniAODv2 | run2_nanoAOD_102Xv1).toModify(l1bits, storeUnprefireableBit=False)
@@ -126,7 +131,7 @@ nanoSequenceCommon = cms.Sequence(
         nanoMetadata + jetSequence + muonSequence + tauSequence + electronSequence+photonSequence+vertexSequence+
         isoTrackSequence + jetLepSequence + # must be after all the leptons 
         linkedObjects  +
-        jetTables + muonTables + tauTables + electronTables + photonTables +  globalTables +vertexTables+ metTables+simpleCleanerTable + isoTrackTables
+        jetTables + muonTables + tauTables + electronTables + photonTables +  globalTables +vertexTables+ metTables+simpleCleanerTable + isoTrackTables + protonTables + lhcInfoTable
         )
 nanoSequenceOnlyFullSim = cms.Sequence(triggerObjectTables + l1bits)
 
@@ -211,10 +216,10 @@ def nanoAOD_activateVID(process):
         setupAllVIDIdsInModule(process,modname,setupVIDElectronSelection)
     process.electronSequence.insert(process.electronSequence.index(process.bitmapVIDForEle),process.egmGsfElectronIDSequence)
     for modifier in run2_miniAOD_80XLegacy, :
-        modifier.toModify(process.electronMVAValueMapProducer, src = "slimmedElectronsUpdated")
+        modifier.toModify(process.electronMVAValueMapProducer, srcMiniAOD = "slimmedElectronsUpdated")
         modifier.toModify(process.egmGsfElectronIDs, physicsObjectSrc = "slimmedElectronsUpdated")
     for modifier in run2_nanoAOD_94XMiniAODv1,run2_nanoAOD_94XMiniAODv2,run2_nanoAOD_94X2016 ,run2_nanoAOD_102Xv1:
-        modifier.toModify(process.electronMVAValueMapProducer, src = "slimmedElectronsTo106X")
+        modifier.toModify(process.electronMVAValueMapProducer, srcMiniAOD = "slimmedElectronsTo106X")
         modifier.toModify(process.egmGsfElectronIDs, physicsObjectSrc = "slimmedElectronsTo106X")
         
  
@@ -224,7 +229,7 @@ def nanoAOD_activateVID(process):
         setupAllVIDIdsInModule(process,modname,setupVIDPhotonSelection)
     process.photonSequence.insert(process.photonSequence.index(bitmapVIDForPho),process.egmPhotonIDSequence)
     for modifier in run2_miniAOD_80XLegacy,run2_nanoAOD_94XMiniAODv1,run2_nanoAOD_94XMiniAODv2,run2_nanoAOD_94X2016 ,run2_nanoAOD_102Xv1:
-        modifier.toModify(process.photonMVAValueMapProducer, src = "slimmedPhotonsTo106X")
+        modifier.toModify(process.photonMVAValueMapProducer, srcMiniAOD = "slimmedPhotonsTo106X")
         modifier.toModify(process.egmPhotonIDs, physicsObjectSrc = "slimmedPhotonsTo106X")
     return process
 

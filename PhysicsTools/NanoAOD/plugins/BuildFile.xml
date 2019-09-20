@@ -19,6 +19,11 @@
 <use   name="CondTools/BTau"/>
 <use   name="fastjet"/>
 <use   name="fastjet-contrib"/>
+<use   name="DataFormats/CTPPSDetId"/>
+<use   name="DataFormats/CTPPSReco"/>
+<use   name="DataFormats/ProtonReco"/>
+<use   name="CondFormats/RunInfo"/>
+<use   name="CondFormats/DataRecord"/>
 <library   file="*.cc" name="PhysicsToolsNanoAODPlugins">
   <flags   EDM_PLUGIN="1"/>
 </library>
