@@ -31,28 +31,28 @@ nanoMetadata = cms.EDProducer("UniqueStringProducer",
 )
 
 linkedObjects = cms.EDProducer("PATObjectCrossLinker",
-    jets=cms.InputTag("finalJets"),
-    muons=cms.InputTag("finalMuons"),
-    electrons=cms.InputTag("finalElectrons"),
-    taus=cms.InputTag("finalTaus"),
-    photons=cms.InputTag("finalPhotons"),
+   jets=cms.InputTag("finalJets"),
+   muons=cms.InputTag("finalMuons"),
+   electrons=cms.InputTag("finalElectrons"),
+   taus=cms.InputTag("finalTaus"),
+   photons=cms.InputTag("finalPhotons"),
 )
 
 simpleCleanerTable = cms.EDProducer("NanoAODSimpleCrossCleaner",
-    name=cms.string("cleanmask"),
-    doc=cms.string("simple cleaning mask with priority to leptons"),
-    jets=cms.InputTag("linkedObjects","jets"),
-    muons=cms.InputTag("linkedObjects","muons"),
-    electrons=cms.InputTag("linkedObjects","electrons"),
-    taus=cms.InputTag("linkedObjects","taus"),
-    photons=cms.InputTag("linkedObjects","photons"),
-    jetSel=cms.string("pt>15"),
-    muonSel=cms.string("track.isNonnull && isLooseMuon && isPFMuon && innerTrack.validFraction >= 0.49 && ( isGlobalMuon && globalTrack.normalizedChi2 < 3 && combinedQuality.chi2LocalPosition < 12 && combinedQuality.trkKink < 20 && segmentCompatibility >= 0.303 || segmentCompatibility >= 0.451 )"),
-    electronSel=cms.string(""),
-    tauSel=cms.string(""),
-    photonSel=cms.string(""),
-    jetName=cms.string("Jet"),muonName=cms.string("Muon"),electronName=cms.string("Electron"),
-    tauName=cms.string("Tau"),photonName=cms.string("Photon")
+   name=cms.string("cleanmask"),
+   doc=cms.string("simple cleaning mask with priority to leptons"),
+   jets=cms.InputTag("linkedObjects","jets"),
+   muons=cms.InputTag("linkedObjects","muons"),
+   electrons=cms.InputTag("linkedObjects","electrons"),
+   taus=cms.InputTag("linkedObjects","taus"),
+   photons=cms.InputTag("linkedObjects","photons"),
+   jetSel=cms.string("pt>15"),
+   muonSel=cms.string("track.isNonnull && isLooseMuon && isPFMuon && innerTrack.validFraction >= 0.49 && ( isGlobalMuon && globalTrack.normalizedChi2 < 3 && combinedQuality.chi2LocalPosition < 12 && combinedQuality.trkKink < 20 && segmentCompatibility >= 0.303 || segmentCompatibility >= 0.451 )"),
+   electronSel=cms.string(""),
+   tauSel=cms.string(""),
+   photonSel=cms.string(""),
+   jetName=cms.string("Jet"),muonName=cms.string("Muon"),electronName=cms.string("Electron"),
+   tauName=cms.string("Tau"),photonName=cms.string("Photon")
 )
 
 btagSFdir="PhysicsTools/NanoAOD/data/btagSF/"
@@ -91,6 +91,8 @@ for modifier in run2_miniAOD_80XLegacy, run2_nanoAOD_94X2016: # to be updated wh
             btagSFdir+"cMVAv2_Moriond17_B_H.csv"                                            
         )
     )
+
+
 genWeightsTable = cms.EDProducer("GenWeightsTableProducer",
     genEvent = cms.InputTag("generator"),
     lheInfo = cms.VInputTag(cms.InputTag("externalLHEProducer"), cms.InputTag("source")),
@@ -108,14 +110,13 @@ genWeightsTable = cms.EDProducer("GenWeightsTableProducer",
     maxPdfWeights = cms.uint32(150), 
     debug = cms.untracked.bool(False),
 )
+lhcInfoTable = cms.EDProducer("LHCInfoProducer",
+                              precision = cms.int32(10),
+)
 lheInfoTable = cms.EDProducer("LHETablesProducer",
     lheInfo = cms.VInputTag(cms.InputTag("externalLHEProducer"), cms.InputTag("source")),
     precision = cms.int32(14),
     storeLHEParticles = cms.bool(True) 
-)
-
-lhcInfoTable = cms.EDProducer("LHCInfoProducer",
-                              precision = cms.int32(10),
 )
 
 l1bits=cms.EDProducer("L1TriggerResultsConverter", src=cms.InputTag("gtStage2Digis"), legacyL1=cms.bool(False),
@@ -123,16 +124,16 @@ l1bits=cms.EDProducer("L1TriggerResultsConverter", src=cms.InputTag("gtStage2Dig
 (run2_miniAOD_80XLegacy | run2_nanoAOD_94X2016 | run2_nanoAOD_94XMiniAODv1 | run2_nanoAOD_94XMiniAODv2 | run2_nanoAOD_102Xv1).toModify(l1bits, storeUnprefireableBit=False)
 
 nanoSequenceCommon = cms.Sequence(
-    nanoMetadata + jetSequence + muonSequence + tauSequence + electronSequence+photonSequence+vertexSequence+
-    isoTrackSequence +# must be after all the leptons 
-    linkedObjects +
-    jetTables + muonTables + tauTables + electronTables + photonTables +  globalTables +vertexTables+ metTables+simpleCleanerTable +isoTrackTables +protonTables +lhcInfoTable
-    )
+        nanoMetadata + jetSequence + muonSequence + tauSequence + electronSequence+photonSequence+vertexSequence+
+        isoTrackSequence + # must be after all the leptons 
+        linkedObjects  +
+        jetTables + muonTables + tauTables + electronTables + photonTables +  globalTables +vertexTables+ metTables+simpleCleanerTable + isoTrackTables +protonTables +lhcInfoTable
+        )
 nanoSequenceOnlyFullSim = cms.Sequence(triggerObjectTables + l1bits)
 
 nanoSequence = cms.Sequence(nanoSequenceCommon + nanoSequenceOnlyFullSim)
 
-nanoSequenceFS = cms.Sequence(genParticleSequence + particleLevelSequence + nanoSequenceCommon + jetMC + muonMC + electronMC + photonMC + tauMC + metMC + ttbarCatMCProducers + globalTablesMC + btagWeightTable + genWeightsTable + genParticleTables + particleLevelTables + lheInfoTable  + ttbarCategoryTable )
+nanoSequenceFS = cms.Sequence(genParticleSequence + particleLevelSequence + nanoSequenceCommon + jetMC + muonMC + electronMC + photonMC + tauMC + metMC + ttbarCatMCProducers +  globalTablesMC + btagWeightTable + genWeightsTable + genParticleTables + particleLevelTables + lheInfoTable  + ttbarCategoryTable )
 
 nanoSequenceMC = nanoSequenceFS.copy()
 nanoSequenceMC.insert(nanoSequenceFS.index(nanoSequenceCommon)+1,nanoSequenceOnlyFullSim)
@@ -200,10 +201,10 @@ def nanoAOD_activateVID(process):
         setupAllVIDIdsInModule(process,modname,setupVIDElectronSelection)
     process.electronSequence.insert(process.electronSequence.index(process.bitmapVIDForEle),process.egmGsfElectronIDSequence)
     for modifier in run2_miniAOD_80XLegacy, :
-        modifier.toModify(process.electronMVAValueMapProducer, srcMiniAOD = "slimmedElectronsUpdated")
+        modifier.toModify(process.electronMVAValueMapProducer, src = "slimmedElectronsUpdated")
         modifier.toModify(process.egmGsfElectronIDs, physicsObjectSrc = "slimmedElectronsUpdated")
     for modifier in run2_nanoAOD_94XMiniAODv1,run2_nanoAOD_94XMiniAODv2,run2_nanoAOD_94X2016 ,run2_nanoAOD_102Xv1:
-        modifier.toModify(process.electronMVAValueMapProducer, srcMiniAOD = "slimmedElectronsTo106X")
+        modifier.toModify(process.electronMVAValueMapProducer, src = "slimmedElectronsTo106X")
         modifier.toModify(process.egmGsfElectronIDs, physicsObjectSrc = "slimmedElectronsTo106X")
         
  
@@ -213,7 +214,7 @@ def nanoAOD_activateVID(process):
         setupAllVIDIdsInModule(process,modname,setupVIDPhotonSelection)
     process.photonSequence.insert(process.photonSequence.index(bitmapVIDForPho),process.egmPhotonIDSequence)
     for modifier in run2_miniAOD_80XLegacy,run2_nanoAOD_94XMiniAODv1,run2_nanoAOD_94XMiniAODv2,run2_nanoAOD_94X2016 ,run2_nanoAOD_102Xv1:
-        modifier.toModify(process.photonMVAValueMapProducer, srcMiniAOD = "slimmedPhotonsTo106X")
+        modifier.toModify(process.photonMVAValueMapProducer, src = "slimmedPhotonsTo106X")
         modifier.toModify(process.egmPhotonIDs, physicsObjectSrc = "slimmedPhotonsTo106X")
     return process
 
@@ -296,6 +297,7 @@ def nanoAOD_customizeData(process):
         unpackedPatTrigger,
         triggerResults = "TriggerResults::HLT"
     )
+
     return process
 
 def nanoAOD_customizeMC(process):
