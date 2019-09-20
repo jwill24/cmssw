@@ -32,28 +32,28 @@ nanoMetadata = cms.EDProducer("UniqueStringProducer",
 )
 
 linkedObjects = cms.EDProducer("PATObjectCrossLinker",
-   jets=cms.InputTag("finalJets"),
-   muons=cms.InputTag("finalMuons"),
-   electrons=cms.InputTag("finalElectrons"),
-   taus=cms.InputTag("finalTaus"),
-   photons=cms.InputTag("finalPhotons"),
+    jets=cms.InputTag("finalJets"),
+    muons=cms.InputTag("finalMuons"),
+    electrons=cms.InputTag("finalElectrons"),
+    taus=cms.InputTag("finalTaus"),
+    photons=cms.InputTag("finalPhotons"),
 )
 
 simpleCleanerTable = cms.EDProducer("NanoAODSimpleCrossCleaner",
-   name=cms.string("cleanmask"),
-   doc=cms.string("simple cleaning mask with priority to leptons"),
-   jets=cms.InputTag("linkedObjects","jets"),
-   muons=cms.InputTag("linkedObjects","muons"),
-   electrons=cms.InputTag("linkedObjects","electrons"),
-   taus=cms.InputTag("linkedObjects","taus"),
-   photons=cms.InputTag("linkedObjects","photons"),
-   jetSel=cms.string("pt>15"),
-   muonSel=cms.string("track.isNonnull && isLooseMuon && isPFMuon && innerTrack.validFraction >= 0.49 && ( isGlobalMuon && globalTrack.normalizedChi2 < 3 && combinedQuality.chi2LocalPosition < 12 && combinedQuality.trkKink < 20 && segmentCompatibility >= 0.303 || segmentCompatibility >= 0.451 )"),
-   electronSel=cms.string(""),
-   tauSel=cms.string(""),
-   photonSel=cms.string(""),
-   jetName=cms.string("Jet"),muonName=cms.string("Muon"),electronName=cms.string("Electron"),
-   tauName=cms.string("Tau"),photonName=cms.string("Photon")
+    name=cms.string("cleanmask"),
+    doc=cms.string("simple cleaning mask with priority to leptons"),
+    jets=cms.InputTag("linkedObjects","jets"),
+    muons=cms.InputTag("linkedObjects","muons"),
+    electrons=cms.InputTag("linkedObjects","electrons"),
+    taus=cms.InputTag("linkedObjects","taus"),
+    photons=cms.InputTag("linkedObjects","photons"),
+    jetSel=cms.string("pt>15"),
+    muonSel=cms.string("track.isNonnull && isLooseMuon && isPFMuon && innerTrack.validFraction >= 0.49 && ( isGlobalMuon && globalTrack.normalizedChi2 < 3 && combinedQuality.chi2LocalPosition < 12 && combinedQuality.trkKink < 20 && segmentCompatibility >= 0.303 || segmentCompatibility >= 0.451 )"),
+    electronSel=cms.string(""),
+    tauSel=cms.string(""),
+    photonSel=cms.string(""),
+    jetName=cms.string("Jet"),muonName=cms.string("Muon"),electronName=cms.string("Electron"),
+    tauName=cms.string("Tau"),photonName=cms.string("Photon")
 )
 
 btagSFdir="PhysicsTools/NanoAOD/data/btagSF/"
@@ -92,8 +92,8 @@ for modifier in run2_miniAOD_80XLegacy, run2_nanoAOD_94X2016: # to be updated wh
             btagSFdir+"cMVAv2_Moriond17_B_H.csv"                                            
         )
     )
-
-
+    
+    
 genWeightsTable = cms.EDProducer("GenWeightsTableProducer",
     genEvent = cms.InputTag("generator"),
     genLumiInfoHeader = cms.InputTag("generator"),
@@ -119,7 +119,7 @@ lheInfoTable = cms.EDProducer("LHETablesProducer",
     storeLHEParticles = cms.bool(True) 
 )
 
-lhcInfoTable = cms.EDProducer("LHCInfoProducer",
+lhcInfoTable = cms.EDProducer("lhcInfoProducer",
                               precision = cms.int32(10),
 )
 
@@ -137,7 +137,7 @@ nanoSequenceOnlyFullSim = cms.Sequence(triggerObjectTables + l1bits)
 
 nanoSequence = cms.Sequence(nanoSequenceCommon + nanoSequenceOnlyFullSim)
 
-nanoSequenceFS = cms.Sequence(genParticleSequence + particleLevelSequence + nanoSequenceCommon + jetMC + muonMC + electronMC + photonMC + tauMC + metMC + ttbarCatMCProducers +  globalTablesMC + btagWeightTable + genWeightsTable + genParticleTables + particleLevelTables + lheInfoTable  + ttbarCategoryTable )
+nanoSequenceFS = cms.Sequence(genParticleSequence + particleLevelSequence + nanoSequenceCommon + jetMC + muonMC + electronMC + photonMC + tauMC + metMC + ttbarCatMCProducers + globalTablesMC + btagWeightTable + genWeightsTable + genParticleTables + particleLevelTables + lheInfoTable  + ttbarCategoryTable )
 
 nanoSequenceMC = nanoSequenceFS.copy()
 nanoSequenceMC.insert(nanoSequenceFS.index(nanoSequenceCommon)+1,nanoSequenceOnlyFullSim)
