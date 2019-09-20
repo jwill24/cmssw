@@ -92,8 +92,6 @@ for modifier in run2_miniAOD_80XLegacy, run2_nanoAOD_94X2016: # to be updated wh
             btagSFdir+"cMVAv2_Moriond17_B_H.csv"                                            
         )
     )
-    
-    
 genWeightsTable = cms.EDProducer("GenWeightsTableProducer",
     genEvent = cms.InputTag("generator"),
     genLumiInfoHeader = cms.InputTag("generator"),
@@ -119,7 +117,7 @@ lheInfoTable = cms.EDProducer("LHETablesProducer",
     storeLHEParticles = cms.bool(True) 
 )
 
-lhcInfoTable = cms.EDProducer("lhcInfoProducer",
+lhcInfoTable = cms.EDProducer("LHCInfoProducer",
                               precision = cms.int32(10),
 )
 
