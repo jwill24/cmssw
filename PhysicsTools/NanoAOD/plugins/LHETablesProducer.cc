@@ -14,10 +14,10 @@
 class LHETablesProducer : public edm::global::EDProducer<> {
 public:
   LHETablesProducer(edm::ParameterSet const& params)
-    : lheTag_(edm::vector_transform(params.getParameter<std::vector<edm::InputTag>>("lheInfo"),
-				    [this](const edm::InputTag& tag) { return mayConsume<LHEEventProduct>(tag); })),
-      precision_(params.getParameter<int>("precision")),
-      storeLHEParticles_(params.getParameter<bool>("storeLHEParticles")) {
+      : lheTag_(edm::vector_transform(params.getParameter<std::vector<edm::InputTag>>("lheInfo"),
+                                      [this](const edm::InputTag& tag) { return mayConsume<LHEEventProduct>(tag); })),
+        precision_(params.getParameter<int>("precision")),
+        storeLHEParticles_(params.getParameter<bool>("storeLHEParticles")) {
     produces<nanoaod::FlatTable>("LHE");
     if (storeLHEParticles_)
       produces<nanoaod::FlatTable>("LHEPart");
@@ -88,8 +88,8 @@ public:
         double pt = std::hypot(pup[i][0], pup[i][1]);  // first entry is px, second py
         lheHT += pt;
         int mothIdx = std::max(
-			       hepeup.MOTHUP[i].first - 1,
-			       0);  //first and last mother as pair; first entry has index 1 in LHE; incoming particles return motherindex 0
+            hepeup.MOTHUP[i].first - 1,
+            0);  //first and last mother as pair; first entry has index 1 in LHE; incoming particles return motherindex 0
         int mothIdxTwo = std::max(hepeup.MOTHUP[i].second - 1, 0);
         int mothStatus = hepeup.ISTUP[mothIdx];
         int mothStatusTwo = hepeup.ISTUP[mothIdxTwo];
@@ -116,13 +116,13 @@ public:
     }
 
     out.addColumnValue<uint8_t>(
-				"Njets", lheNj, "Number of jets (partons) at LHE step", nanoaod::FlatTable::UInt8Column);
+        "Njets", lheNj, "Number of jets (partons) at LHE step", nanoaod::FlatTable::UInt8Column);
     out.addColumnValue<uint8_t>("Nb", lheNb, "Number of b partons at LHE step", nanoaod::FlatTable::UInt8Column);
     out.addColumnValue<uint8_t>("Nc", lheNc, "Number of c partons at LHE step", nanoaod::FlatTable::UInt8Column);
     out.addColumnValue<uint8_t>(
-				"Nuds", lheNuds, "Number of u,d,s partons at LHE step", nanoaod::FlatTable::UInt8Column);
+        "Nuds", lheNuds, "Number of u,d,s partons at LHE step", nanoaod::FlatTable::UInt8Column);
     out.addColumnValue<uint8_t>(
-				"Nglu", lheNglu, "Number of gluon partons at LHE step", nanoaod::FlatTable::UInt8Column);
+        "Nglu", lheNglu, "Number of gluon partons at LHE step", nanoaod::FlatTable::UInt8Column);
     out.addColumnValue<float>("HT", lheHT, "HT, scalar sum of parton pTs at LHE step", nanoaod::FlatTable::FloatColumn);
     out.addColumnValue<float>("HTIncoming",
                               lheHTIncoming,
