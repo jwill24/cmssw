@@ -52,7 +52,7 @@ public:
     produces<edm::ValueMap<int>>("protonRPType");
     produces<edm::ValueMap<bool>>("sector45");
     produces<edm::ValueMap<bool>>("sector56");
-    produces<nanoaod::FlatTable>("trackTable");
+    produces<nanoaod::FlatTable>("ppsTrackTable");
   }
   ~ProtonProducer() override {}
   
@@ -144,7 +144,7 @@ public:
     iEvent.put(std::move(protonRPTypeV), "protonRPType");
     iEvent.put(std::move(sector45V), "sector45");
     iEvent.put(std::move(sector56V), "sector56");
-    iEvent.put(std::move(ppsTab), "trackTable");
+    iEvent.put(std::move(ppsTab), "ppsTrackTable");
   }  
 
   // ------------ method fills 'descriptions' with the allowed parameters for the module  ------------

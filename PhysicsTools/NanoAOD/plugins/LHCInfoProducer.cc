@@ -80,8 +80,8 @@ public:
     float betaStar = info->betaStar();
 
     auto out = std::make_unique<nanoaod::FlatTable>(1,"LHCInfo",true);
-    out->addColumnValue<float>("xangle", xangle, "LHC crossing angle", nanoaod::FlatTable::FloatColumn);
-    out->addColumnValue<float>("betaStar",betaStar,"LHC beta star", nanoaod::FlatTable::FloatColumn);
+    out->addColumnValue<float>("xangle", xangle, "LHC crossing angle", nanoaod::FlatTable::FloatColumn,precision_);
+    out->addColumnValue<float>("betaStar",betaStar,"LHC beta star", nanoaod::FlatTable::FloatColumn,precision_);
     return out;
   }
 

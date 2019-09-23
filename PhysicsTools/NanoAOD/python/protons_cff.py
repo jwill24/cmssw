@@ -30,7 +30,7 @@ singleRPTable = cms.EDProducer("SimpleProtonTrackFlatTableProducer",
         validFit = Var("validFit",bool,doc="valid Fit"),
     ),
     externalVariables = cms.PSet(
-        decDetId = ExtVar("protonSingleTable:protonsDetId",int,doc="Detector ID",precision=10),
+        decDetId = ExtVar("protonSingleTable:protonRPId",int,doc="Detector ID",precision=10),
         protonRPType = ExtVar("protonSingleTable:protonRPType",int,doc="Sub detector ID",precision=10),
         sector45 = ExtVar("protonSingleTable:sector45",bool,doc="LHC sector 45"),
         sector56 = ExtVar("protonSingleTable:sector56",bool,doc="LHC sector 56"),
