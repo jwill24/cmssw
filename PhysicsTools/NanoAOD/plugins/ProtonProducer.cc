@@ -44,7 +44,7 @@
 class ProtonProducer : public edm::global::EDProducer<> {
 public:
   ProtonProducer( edm::ParameterSet const & ps) :
-    tokenRecoProtons_(consumes<reco::ForwardProtonCollection>(ps.getParameter<edm::InputTag>("tagRecoProtons"))),
+    tokenRecoProtons_(mayConsume<reco::ForwardProtonCollection>(ps.getParameter<edm::InputTag>("tagRecoProtons"))),
     precision_( ps.getParameter<int>("precision") ),
     method_( ps.getParameter<std::string>("method") )
   {
@@ -61,6 +61,7 @@ public:
 
     // Get Forward Proton handle
     edm::Handle<reco::ForwardProtonCollection> hRecoProtons;
+    if (BadHandle(hRecoProtons,"tagRecoProtons")) return;
     iEvent.getByToken(tokenRecoProtons_, hRecoProtons);
 
     std::vector<int> protonRPId, protonRPType;
@@ -146,6 +147,19 @@ public:
     iEvent.put(std::move(sector56V), "sector56");
     iEvent.put(std::move(ppsTab), "ppsTrackTable");
   }  
+
+  
+  template <typename T>
+  inline bool BadHandle(const T & objH, const std::string & desc) const
+  {
+    if (objH.isValid()) return false;
+    else
+      {
+	std::cerr << "Bad handle for " << desc.c_str() << "! Will not attempt to build proton table" << std::endl;
+	return true;
+      }
+  }
+  
 
   // ------------ method fills 'descriptions' with the allowed parameters for the module  ------------
   static void fillDescriptions(edm::ConfigurationDescriptions & descriptions) {
