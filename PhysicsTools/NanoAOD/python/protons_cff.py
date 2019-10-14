@@ -1,16 +1,9 @@
 import FWCore.ParameterSet.Config as cms
 from PhysicsTools.NanoAOD.common_cff import *
 
-protonSingleTable = cms.EDProducer("ProtonProducer",
-                              precision = cms.int32(14),
-                              tagRecoProtons = cms.InputTag("ctppsProtons", "singleRP"),
-                              method = cms.string('singleRP'),
-)
-
-protonMultiTable = cms.EDProducer("ProtonProducer",
-                              precision = cms.int32(14),
-                              tagRecoProtons = cms.InputTag("ctppsProtons", "multiRP"),
-                              method = cms.string('multiRP'),
+protonTable = cms.EDProducer("ProtonProducer",
+                        precision = cms.int32(14),
+                        tagRecoProtons = cms.VInputTag( cms.InputTag("ctppsProtons", "singleRP"),cms.InputTag("ctppsProtons", "multiRP") )
 )
 
 singleRPTable = cms.EDProducer("SimpleProtonTrackFlatTableProducer",
@@ -30,13 +23,12 @@ singleRPTable = cms.EDProducer("SimpleProtonTrackFlatTableProducer",
         validFit = Var("validFit",bool,doc="valid Fit"),
     ),
     externalVariables = cms.PSet(
-        decDetId = ExtVar("protonSingleTable:protonRPId",int,doc="Detector ID",precision=10),
-        protonRPType = ExtVar("protonSingleTable:protonRPType",int,doc="Sub detector ID",precision=10),
-        sector45 = ExtVar("protonSingleTable:sector45",bool,doc="LHC sector 45"),
-        sector56 = ExtVar("protonSingleTable:sector56",bool,doc="LHC sector 56"),
+        decDetId = ExtVar("protonTable:protonRPId",int,doc="Detector ID",precision=10),
+        protonRPType = ExtVar("protonTable:protonRPType",int,doc="Sub detector ID",precision=10),
+        sector45 = ExtVar("protonTable:sector45Single",bool,doc="LHC sector 45"),
+        sector56 = ExtVar("protonTable:sector56Single",bool,doc="LHC sector 56"),
     ),
 )
-
 
 multiRPTable = cms.EDProducer("SimpleProtonTrackFlatTableProducer",
     src = cms.InputTag("ctppsProtons","multiRP"),
@@ -64,15 +56,14 @@ multiRPTable = cms.EDProducer("SimpleProtonTrackFlatTableProducer",
         timeError = Var("timeError",float,doc="time Error",precision=10),
     ),
     externalVariables = cms.PSet(
-        sector45 = ExtVar("protonMultiTable:sector45",bool,doc="LHC sector 45"),
-        sector56 = ExtVar("protonMultiTable:sector56",bool,doc="LHC sector 56"),
+        sector45 = ExtVar("protonTable:sector45Multi",bool,doc="LHC sector 45"),
+        sector56 = ExtVar("protonTable:sector56Multi",bool,doc="LHC sector 56"),
     ),
 )
 
 
-protonTables = cms.Sequence(    
-    protonSingleTable
-    +protonMultiTable
-    +singleRPTable
-    +multiRPTable
+protonTables = cms.Sequence(
+    protonTable+
+    singleRPTable+
+    multiRPTable
 )
