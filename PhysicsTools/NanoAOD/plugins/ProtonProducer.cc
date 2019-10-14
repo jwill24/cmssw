@@ -29,6 +29,7 @@
 
 #include "FWCore/ParameterSet/interface/ParameterSet.h"
 #include "FWCore/Utilities/interface/StreamID.h"
+#include "FWCore/Utilities/interface/transform.h"
 
 #include "RecoEgamma/EgammaTools/interface/EffectiveAreas.h"
 
@@ -44,14 +45,17 @@
 class ProtonProducer : public edm::global::EDProducer<> {
 public:
   ProtonProducer( edm::ParameterSet const & ps) :
-    tokenRecoProtons_(mayConsume<reco::ForwardProtonCollection>(ps.getParameter<edm::InputTag>("tagRecoProtons"))),
     precision_( ps.getParameter<int>("precision") ),
-    method_( ps.getParameter<std::string>("method") )
+    protonLabel_(ps.getParameter<std::vector<edm::InputTag>>("tagRecoProtons")),
+    protonTag_(edm::vector_transform(protonLabel_,
+				     [this](const edm::InputTag& tag) { return mayConsume<reco::ForwardProtonCollection>(tag); }))
   {
     produces<edm::ValueMap<int>>("protonRPId");
     produces<edm::ValueMap<int>>("protonRPType");
-    produces<edm::ValueMap<bool>>("sector45");
-    produces<edm::ValueMap<bool>>("sector56");
+    produces<edm::ValueMap<bool>>("sector45Single");
+    produces<edm::ValueMap<bool>>("sector56Single");
+    produces<edm::ValueMap<bool>>("sector45Multi");
+    produces<edm::ValueMap<bool>>("sector56Multi");
     produces<nanoaod::FlatTable>("ppsTrackTable");
   }
   ~ProtonProducer() override {}
@@ -59,108 +63,131 @@ public:
   // ------------ method called to produce the data  ------------
   void produce(edm::StreamID id, edm::Event& iEvent, const edm::EventSetup& iSetup) const override {
 
-    // Get Forward Proton handle
-    edm::Handle<reco::ForwardProtonCollection> hRecoProtons;
-    if (BadHandle(hRecoProtons,"tagRecoProtons")) return;
-    iEvent.getByToken(tokenRecoProtons_, hRecoProtons);
-
     std::vector<int> protonRPId, protonRPType;
-    std::vector<bool> sector45, sector56;
-    int num_proton = hRecoProtons->size();
-    int proton_pos = 0;
+    std::vector<bool> sector45Single, sector56Single, sector45Multi, sector56Multi;
+    std::vector<bool> trackMethod;
     std::vector<float> trackX, trackXUnc, trackY, trackYUnc, trackTime, trackTimeUnc;
     std::vector<int> trackIdx, numPlanes, pixelRecoInfo;
+    int reco_type = 0;
 
-    protonRPId.reserve( num_proton );
-    sector45.reserve( num_proton );
-    sector56.reserve( num_proton );
-
-    for (const auto &proton : *hRecoProtons) {
-      CTPPSDetId rpId((*proton.contributingLocalTracks().begin())->getRPId());
-      protonRPId.push_back( rpId.arm() * 100 + rpId.station() * 10 + rpId.rp() );
-      protonRPType.push_back( rpId.subdetId() );
-
-      if (proton.pz() < 0. ) {
-	sector56.push_back( true );
-	sector45.push_back( false );
+    // Get Forward Proton handle
+    edm::Handle<reco::ForwardProtonCollection> hRecoProtons;
+    for (const auto& protonTag : protonTag_) {
+      if (!hRecoProtons.isValid()) {
+	break;
       }
-      else if (proton.pz() > 0. ) {
-	sector45.push_back( true );
-	sector56.push_back( false );
-      }
-      else {
-	sector45.push_back( false );
-        sector56.push_back( false );
+      iEvent.getByToken(protonTag,hRecoProtons);
+
+      int proton_pos = 0;
+
+      for (const auto &proton : *hRecoProtons) {
+	if ( proton.method() == reco::ForwardProton::ReconstructionMethod::singleRP ) {
+	  CTPPSDetId rpId((*proton.contributingLocalTracks().begin())->getRPId());
+	  protonRPId.push_back( rpId.arm() * 100 + rpId.station() * 10 + rpId.rp() );
+	  protonRPType.push_back( rpId.subdetId() );
+	}
+	
+	if (proton.pz() < 0. ) {
+	  if ( proton.method() == reco::ForwardProton::ReconstructionMethod::singleRP ) {
+	    sector56Single.push_back( true );
+	    sector45Single.push_back( false );
+	  } else {
+	    sector56Multi.push_back( true );
+	    sector45Multi.push_back( false );
+	  }
+	}
+	else if (proton.pz() > 0. ) {
+	  if( proton.method() == reco::ForwardProton::ReconstructionMethod::singleRP ) {
+	    sector45Single.push_back( true );
+	    sector56Single.push_back( false );
+	  } else {
+	    sector45Multi.push_back( true );
+            sector56Multi.push_back( false );
+	  }
+	}
+	else {
+	  if ( proton.method() == reco::ForwardProton::ReconstructionMethod::singleRP ) {
+            sector45Single.push_back( false );
+            sector56Single.push_back( false );
+          } else {
+            sector45Multi.push_back( false );
+            sector56Multi.push_back( false );
+          }
+	}
+
+	for (const auto& tr : proton.contributingLocalTracks()) {
+	  ( proton.method() == reco::ForwardProton::ReconstructionMethod::singleRP ) ? trackMethod.push_back( true ) : trackMethod.push_back( false );
+	  trackX.push_back( tr->getX() );
+	  trackXUnc.push_back( tr->getXUnc() );
+	  trackY.push_back( tr->getY() );
+	  trackYUnc.push_back( tr->getYUnc() );
+	  trackTime.push_back( tr->getTime() );
+	  trackTimeUnc.push_back( tr->getTimeUnc() );
+	  trackIdx.push_back( proton_pos );
+	  numPlanes.push_back( tr->getNumberOfPointsUsedForFit() );
+	  pixelRecoInfo.push_back( static_cast<int>(tr->getPixelTrackRecoInfo()) );
+	}
+	proton_pos++;
       }
 
-      for (const auto& tr : proton.contributingLocalTracks()) {
-	trackX.push_back( tr->getX() );
-	trackXUnc.push_back( tr->getXUnc() );
-	trackY.push_back( tr->getY() );
-	trackYUnc.push_back( tr->getYUnc() );
-	trackTime.push_back( tr->getTime() );
-	trackTimeUnc.push_back( tr->getTimeUnc() );
-	trackIdx.push_back( proton_pos );
-	numPlanes.push_back( tr->getNumberOfPointsUsedForFit() );
-	pixelRecoInfo.push_back( static_cast<int>(tr->getPixelTrackRecoInfo()) );
-      }
-      proton_pos++;
-    }
+      if (reco_type == 0) {
+	std::unique_ptr<edm::ValueMap<int>> protonRPIdV(new edm::ValueMap<int>());
+	edm::ValueMap<int>::Filler fillerID(*protonRPIdV);
+	fillerID.insert(hRecoProtons, protonRPId.begin(), protonRPId.end());
+	fillerID.fill();
+	
+	std::unique_ptr<edm::ValueMap<int>> protonRPTypeV(new edm::ValueMap<int>());
+	edm::ValueMap<int>::Filler fillerSubID(*protonRPTypeV);
+	fillerSubID.insert(hRecoProtons, protonRPType.begin(), protonRPType.end());
+	fillerSubID.fill();
 
-    auto ppsTab = std::make_unique<nanoaod::FlatTable>(trackX.size(),Form("PPSLocalTrack_%s",method_.c_str()),false);
-    ppsTab->addColumn<float>("x",trackX,"local track x",nanoaod::FlatTable::FloatColumn,precision_);
-    ppsTab->addColumn<float>("xUnc",trackXUnc,"local track x uncertainty",nanoaod::FlatTable::FloatColumn,precision_);
-    ppsTab->addColumn<float>("y",trackY,"local track y",nanoaod::FlatTable::FloatColumn,precision_);
-    ppsTab->addColumn<float>("yUnc",trackYUnc,"local track y uncertainty",nanoaod::FlatTable::FloatColumn,precision_);
-    if ( method_ == "multiRP" ) {
+	std::unique_ptr<edm::ValueMap<bool>> sector45SingleV(new edm::ValueMap<bool>());
+	edm::ValueMap<bool>::Filler filler45Single(*sector45SingleV);
+	filler45Single.insert(hRecoProtons, sector45Single.begin(), sector45Single.end());
+	filler45Single.fill();
+	
+	std::unique_ptr<edm::ValueMap<bool>> sector56SingleV(new edm::ValueMap<bool>());
+	edm::ValueMap<bool>::Filler filler56Single(*sector56SingleV);
+	filler56Single.insert(hRecoProtons, sector56Single.begin(), sector56Single.end());
+	filler56Single.fill();
+
+	iEvent.put(std::move(protonRPIdV), "protonRPId");
+	iEvent.put(std::move(protonRPTypeV), "protonRPType");
+	iEvent.put(std::move(sector45SingleV), "sector45Single");
+	iEvent.put(std::move(sector56SingleV), "sector56Single");
+      } else if (reco_type == 1) {
+	std::unique_ptr<edm::ValueMap<bool>> sector45MultiV(new edm::ValueMap<bool>());
+	edm::ValueMap<bool>::Filler filler45Multi(*sector45MultiV);
+	filler45Multi.insert(hRecoProtons, sector45Multi.begin(), sector45Multi.end());
+	filler45Multi.fill();
+	
+	std::unique_ptr<edm::ValueMap<bool>> sector56MultiV(new edm::ValueMap<bool>());
+	edm::ValueMap<bool>::Filler filler56Multi(*sector56MultiV);
+	filler56Multi.insert(hRecoProtons, sector56Multi.begin(), sector56Multi.end());
+	filler56Multi.fill();
+	
+	iEvent.put(std::move(sector45MultiV), "sector45Multi");
+	iEvent.put(std::move(sector56MultiV), "sector56Multi");
+      }
+      reco_type++;
+    } // Loop over proton types
+
+      auto ppsTab = std::make_unique<nanoaod::FlatTable>(trackX.size(),"PPSLocalTrack",false);
+      ppsTab->addColumn<float>("x",trackX,"local track x",nanoaod::FlatTable::FloatColumn,precision_);
+      ppsTab->addColumn<float>("xUnc",trackXUnc,"local track x uncertainty",nanoaod::FlatTable::FloatColumn,precision_);
+      ppsTab->addColumn<float>("y",trackY,"local track y",nanoaod::FlatTable::FloatColumn,precision_);
+      ppsTab->addColumn<float>("yUnc",trackYUnc,"local track y uncertainty",nanoaod::FlatTable::FloatColumn,precision_);
       ppsTab->addColumn<float>("time",trackTime,"local track time",nanoaod::FlatTable::FloatColumn,precision_);
       ppsTab->addColumn<float>("timeUnc",trackTimeUnc,"local track time uncertainty",nanoaod::FlatTable::FloatColumn,precision_);
-    }
-    ppsTab->addColumn<int>("protonIdx",trackIdx,"local track - proton correspondence",nanoaod::FlatTable::IntColumn);
-    ppsTab->addColumn<int>("numPlanes",numPlanes,"number of points used for fit",nanoaod::FlatTable::IntColumn);
-    ppsTab->addColumn<int>("pixelRecoInfo",pixelRecoInfo,"flag if a ROC was shifted by a bunchx",nanoaod::FlatTable::IntColumn);
-    ppsTab->setDoc("ppsLocalTrack variables");
-    
-    std::unique_ptr<edm::ValueMap<int>> protonRPIdV(new edm::ValueMap<int>());
-    edm::ValueMap<int>::Filler fillerID(*protonRPIdV);
-    fillerID.insert(hRecoProtons, protonRPId.begin(), protonRPId.end());
-    fillerID.fill();
+      ppsTab->addColumn<uint8_t>("isMultiRP",trackMethod,"singleRP or multiRP track",nanoaod::FlatTable::BoolColumn);
+      ppsTab->addColumn<int>("protonIdx",trackIdx,"local track - proton correspondence",nanoaod::FlatTable::IntColumn);
+      ppsTab->addColumn<int>("numPlanes",numPlanes,"number of points used for fit",nanoaod::FlatTable::IntColumn);
+      ppsTab->addColumn<int>("pixelRecoInfo",pixelRecoInfo,"flag if a ROC was shifted by a bunchx",nanoaod::FlatTable::IntColumn);
+      ppsTab->setDoc("ppsLocalTrack variables");
 
-    std::unique_ptr<edm::ValueMap<int>> protonRPTypeV(new edm::ValueMap<int>());
-    edm::ValueMap<int>::Filler fillerSubID(*protonRPTypeV);
-    fillerSubID.insert(hRecoProtons, protonRPType.begin(), protonRPType.end());
-    fillerSubID.fill();
-
-    std::unique_ptr<edm::ValueMap<bool>> sector45V(new edm::ValueMap<bool>());
-    edm::ValueMap<bool>::Filler filler45(*sector45V);
-    filler45.insert(hRecoProtons, sector45.begin(), sector45.end());
-    filler45.fill();
-
-    std::unique_ptr<edm::ValueMap<bool>> sector56V(new edm::ValueMap<bool>());
-    edm::ValueMap<bool>::Filler filler56(*sector56V);
-    filler56.insert(hRecoProtons, sector56.begin(), sector56.end());
-    filler56.fill();
-
-    iEvent.put(std::move(protonRPIdV), "protonRPId");
-    iEvent.put(std::move(protonRPTypeV), "protonRPType");
-    iEvent.put(std::move(sector45V), "sector45");
-    iEvent.put(std::move(sector56V), "sector56");
-    iEvent.put(std::move(ppsTab), "ppsTrackTable");
-  }  
-
-  
-  template <typename T>
-  inline bool BadHandle(const T & objH, const std::string & desc) const
-  {
-    if (objH.isValid()) return false;
-    else
-      {
-	std::cerr << "Bad handle for " << desc.c_str() << "! Will not attempt to build proton table" << std::endl;
-	return true;
-      }
+      iEvent.put(std::move(ppsTab), "ppsTrackTable");
   }
   
-
   // ------------ method fills 'descriptions' with the allowed parameters for the module  ------------
   static void fillDescriptions(edm::ConfigurationDescriptions & descriptions) {
     edm::ParameterSetDescription desc;
@@ -169,10 +196,9 @@ public:
   }
   
 protected:
-  const edm::EDGetTokenT<reco::ForwardProtonCollection> tokenRecoProtons_;
   const unsigned int precision_;
-  const std::string method_;
+  const std::vector<edm::InputTag> protonLabel_;
+  const std::vector<edm::EDGetTokenT<reco::ForwardProtonCollection> > protonTag_;
 };
-
 
 DEFINE_FWK_MODULE(ProtonProducer);
