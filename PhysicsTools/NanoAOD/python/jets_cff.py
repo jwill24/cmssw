@@ -500,13 +500,6 @@ subJetTable = cms.EDProducer("SimpleCandidateFlatTableProducer",
         tau4 = Var("userFloat('NjettinessAK8Subjets:tau4')",float, doc="Nsubjettiness (4 axis)",precision=10),
         n2b1 = Var("userFloat('nb1AK8PuppiSoftDropSubjets:ecfN2')", float, doc="N2 with beta=1", precision=10),
         n3b1 = Var("userFloat('nb1AK8PuppiSoftDropSubjets:ecfN3')", float, doc="N3 with beta=1", precision=10),
-<<<<<<< HEAD
-        nBHadrons=Var("jetFlavourInfo().getbHadrons().size()", uint8, doc="number of b-hadrons"),
-        nCHadrons=Var("jetFlavourInfo().getcHadrons().size()", uint8, doc="number of c-hadrons"),
-=======
-        nBHadrons=Var("jetFlavourInfo().getbHadrons().size()", "uint8", doc="number of b-hadrons"),
-        nCHadrons=Var("jetFlavourInfo().getcHadrons().size()", "uint8", doc="number of c-hadrons"),
->>>>>>> fix uint8
     )
 )
 
