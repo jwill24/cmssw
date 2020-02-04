@@ -81,7 +81,7 @@ public:
 
       for (const auto& proton : *hRecoProtons) {
         if (proton.method() == reco::ForwardProton::ReconstructionMethod::singleRP) {
-          CTPPSDetId rpId((*proton.contributingLocalTracks().begin())->getRPId());
+          CTPPSDetId rpId((*proton.contributingLocalTracks().begin())->rpId());
           protonRPId.push_back(rpId.arm() * 100 + rpId.station() * 10 + rpId.rp());
           protonRPType.push_back(rpId.subdetId());
         }
@@ -115,15 +115,15 @@ public:
         for (const auto& tr : proton.contributingLocalTracks()) {
           (proton.method() == reco::ForwardProton::ReconstructionMethod::singleRP) ? trackMethod.push_back(true)
                                                                                    : trackMethod.push_back(false);
-          trackX.push_back(tr->getX());
-          trackXUnc.push_back(tr->getXUnc());
-          trackY.push_back(tr->getY());
-          trackYUnc.push_back(tr->getYUnc());
-          trackTime.push_back(tr->getTime());
-          trackTimeUnc.push_back(tr->getTimeUnc());
+          trackX.push_back(tr->x());
+          trackXUnc.push_back(tr->xUnc());
+          trackY.push_back(tr->y());
+          trackYUnc.push_back(tr->yUnc());
+          trackTime.push_back(tr->time());
+          trackTimeUnc.push_back(tr->timeUnc());
           trackIdx.push_back(proton_pos);
-          numPlanes.push_back(tr->getNumberOfPointsUsedForFit());
-          pixelRecoInfo.push_back(static_cast<int>(tr->getPixelTrackRecoInfo()));
+          numPlanes.push_back(tr->numberOfPointsUsedForFit());
+          pixelRecoInfo.push_back(static_cast<int>(tr->pixelTrackRecoInfo()));
         }
         proton_pos++;
       }
