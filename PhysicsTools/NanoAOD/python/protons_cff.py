@@ -2,8 +2,9 @@ import FWCore.ParameterSet.Config as cms
 from PhysicsTools.NanoAOD.common_cff import *
 
 protonTable = cms.EDProducer("ProtonProducer",
-                        precision = cms.int32(14),
-                        tagRecoProtons = cms.VInputTag( cms.InputTag("ctppsProtons", "singleRP"),cms.InputTag("ctppsProtons", "multiRP") )
+                             precision = cms.int32(14),
+                             tagRecoProtonsSingleRP = cms.InputTag("ctppsProtons", "singleRP"),
+                             tagRecoProtonsMultiRP = cms.InputTag("ctppsProtons", "multiRP"),
 )
 
 singleRPTable = cms.EDProducer("SimpleProtonTrackFlatTableProducer",
@@ -14,7 +15,6 @@ singleRPTable = cms.EDProducer("SimpleProtonTrackFlatTableProducer",
     singleton = cms.bool(False),
     extension = cms.bool(False),
     variables = cms.PSet(
-
         xi = Var("xi",float,doc="xi or dp/p",precision=10),
         xiError = Var("xiError",float,doc="error on xi or dp/p",precision=10),
         pt = Var("pt",float,doc="pt",precision=10),
@@ -38,7 +38,6 @@ multiRPTable = cms.EDProducer("SimpleProtonTrackFlatTableProducer",
     singleton = cms.bool(False),
     extension = cms.bool(False),
     variables = cms.PSet(
-
         xi = Var("xi",float,doc="xi or dp/p",precision=10),
         xiError = Var("xiError",float,doc="error on xi or dp/p",precision=10),
         vy = Var("vy()",float,doc="vy",precision=10),
