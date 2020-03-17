@@ -1,5 +1,9 @@
 import FWCore.ParameterSet.Config as cms
 from PhysicsTools.NanoAOD.common_cff import *
+from Configuration.Eras.Modifier_run2_miniAOD_80XLegacy_cff import run2_miniAOD_80XLegacy
+from Configuration.Eras.Modifier_run2_nanoAOD_94XMiniAODv1_cff import run2_nanoAOD_94XMiniAODv1
+from Configuration.Eras.Modifier_run2_nanoAOD_94XMiniAODv2_cff import run2_nanoAOD_94XMiniAODv2
+from Configuration.Eras.Modifier_run2_nanoAOD_94X2016_cff import run2_nanoAOD_94X2016
 
 protonTable = cms.EDProducer("ProtonProducer",
                              precision = cms.int32(14),
@@ -68,3 +72,4 @@ protonTables = cms.Sequence(
     singleRPTable+
     multiRPTable
 )
+(run2_miniAOD_80XLegacy | run2_nanoAOD_94XMiniAODv1 | run2_nanoAOD_94XMiniAODv2 | run2_nanoAOD_94X2016).toReplaceWith(protonTables, cms.Sequence())
