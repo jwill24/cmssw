@@ -50,8 +50,6 @@ public:
   void produce(edm::Event &iEvent, const edm::EventSetup &iSetup) override {
     edm::Handle<TProd> src;
     iEvent.getByToken(src_, src);
-    if (!src.isValid())
-      return;
 
     std::unique_ptr<nanoaod::FlatTable> out = fillTable(iEvent, src);
     out->setDoc(doc_);
@@ -163,21 +161,23 @@ public:
                                                 const edm::Handle<edm::View<T>> &prod) const override {
     std::vector<const T *> selobjs;
     std::vector<edm::Ptr<T>> selptrs;  // for external variables
-    if (singleton_) {
-      assert(prod->size() == 1);
-      selobjs.push_back(&(*prod)[0]);
-      if (!extvars_.empty())
-        selptrs.emplace_back(prod->ptrAt(0));
-    } else {
-      for (unsigned int i = 0, n = prod->size(); i < n; ++i) {
-        const auto &obj = (*prod)[i];
-        if (cut_(obj)) {
-          selobjs.push_back(&obj);
-          if (!extvars_.empty())
-            selptrs.emplace_back(prod->ptrAt(i));
+    if (prod.isValid() || !(this->skipNonExistingSrc_)) {
+      if (singleton_) {
+        assert(prod->size() == 1);
+        selobjs.push_back(&(*prod)[0]);
+        if (!extvars_.empty())
+          selptrs.emplace_back(prod->ptrAt(0));
+      } else {
+        for (unsigned int i = 0, n = prod->size(); i < n; ++i) {
+          const auto &obj = (*prod)[i];
+          if (cut_(obj)) {
+            selobjs.push_back(&obj);
+            if (!extvars_.empty())
+              selptrs.emplace_back(prod->ptrAt(i));
+          }
+          if (selobjs.size() >= maxLen_)
+            break;
         }
-        if (selobjs.size() >= maxLen_)
-          break;
       }
     }
     auto out = std::make_unique<nanoaod::FlatTable>(selobjs.size(), this->name_, singleton_, this->extension_);
@@ -208,21 +208,24 @@ protected:
                      edm::ConsumesCollector &&cc,
                      bool skipNonExistingSrc = false)
         : ExtVariable(aname, atype, cfg),
-          token_(skipNonExistingSrc ? cc.mayConsume<edm::ValueMap<TIn>>(cfg.getParameter<edm::InputTag>("src"))
-                                    : cc.consumes<edm::ValueMap<TIn>>(cfg.getParameter<edm::InputTag>("src"))) {}
+          skipNonExistingSrc_(skipNonExistingSrc),
+          token_(skipNonExistingSrc_ ? cc.mayConsume<edm::ValueMap<TIn>>(cfg.getParameter<edm::InputTag>("src"))
+                                     : cc.consumes<edm::ValueMap<TIn>>(cfg.getParameter<edm::InputTag>("src"))) {}
     void fill(const edm::Event &iEvent, std::vector<edm::Ptr<T>> selptrs, nanoaod::FlatTable &out) const override {
       edm::Handle<edm::ValueMap<TIn>> vmap;
       iEvent.getByToken(token_, vmap);
-      if (!vmap.isValid())
-        return;
-      std::vector<ValType> vals(selptrs.size());
-      for (unsigned int i = 0, n = vals.size(); i < n; ++i) {
-        vals[i] = (*vmap)[selptrs[i]];
+      std::vector<ValType> vals;
+      if (vmap.isValid() || !skipNonExistingSrc_) {
+        vals.resize(selptrs.size());
+        for (unsigned int i = 0, n = vals.size(); i < n; ++i) {
+          vals[i] = (*vmap)[selptrs[i]];
+        }
       }
       out.template addColumn<ValType>(this->name_, vals, this->doc_, this->type_, this->precision_);
     }
 
   protected:
+    const bool skipNonExistingSrc_;
     edm::EDGetTokenT<edm::ValueMap<TIn>> token_;
   };
   typedef ValueMapVariable<int> IntExtVar;
