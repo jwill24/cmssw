@@ -1,4 +1,4 @@
-<use   name="PhysicsTools/TensorFlow"/>
+1;95;0c<use   name="PhysicsTools/TensorFlow"/>
 <use   name="FWCore/Framework"/>
 <use   name="FWCore/ParameterSet"/>
 <use   name="FWCore/ServiceRegistry"/>
@@ -17,6 +17,11 @@
 <use   name="DQMServices/Core"/>
 <use   name="CondFormats/BTauObjects"/>
 <use   name="CondTools/BTau"/>
+<use   name="DataFormats/CTPPSDetId"/>
+<use   name="DataFormats/CTPPSReco"/>
+<use   name="DataFormats/ProtonReco"/>
+<use   name="CondFormats/RunInfo"/>
+<use   name="CondFormats/DataRecord"/>
 <library   file="*.cc" name="PhysicsToolsNanoAODPlugins">
   <flags   EDM_PLUGIN="1"/>
 </library>

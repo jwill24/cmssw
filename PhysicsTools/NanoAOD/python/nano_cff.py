@@ -15,6 +15,7 @@ from PhysicsTools.NanoAOD.vertices_cff import *
 from PhysicsTools.NanoAOD.met_cff import *
 from PhysicsTools.NanoAOD.triggerObjects_cff import *
 from PhysicsTools.NanoAOD.isotracks_cff import *
+from PhysicsTools.NanoAOD.protons_cff import *
 from PhysicsTools.NanoAOD.NanoAODEDMEventContent_cff import *
 
 from Configuration.Eras.Modifier_run2_miniAOD_80XLegacy_cff import run2_miniAOD_80XLegacy
@@ -118,6 +119,10 @@ lheInfoTable = cms.EDProducer("LHETablesProducer",
     lheInfo = cms.VInputTag(cms.InputTag("externalLHEProducer"), cms.InputTag("source")),
     precision = cms.int32(14),
     storeLHEParticles = cms.bool(True) 
+)
+
+lhcInfoTable = cms.EDProducer("LHCInfoProducer",
+                              precision = cms.int32(10),
 )
 
 l1bits=cms.EDProducer("L1TriggerResultsConverter", src=cms.InputTag("gtStage2Digis"), legacyL1=cms.bool(False),
@@ -270,6 +275,10 @@ def nanoAOD_runMETfixEE2017(process,isData):
                                postfix = "FixEE2017")
     process.nanoSequenceCommon.insert(process.nanoSequenceCommon.index(jetSequence),process.fullPatMetSequenceFixEE2017)
 
+def nanoAOD_runULprotonTables(process):
+    process.nanoSequenceCommon.insert(process.nanoSequenceCommon.index(jetSequence),protonTables)
+    process.nanoSequenceCommon.insert(process.nanoSequenceCommon.index(jetSequence)+1,lhcInfoTable)
+
 def nanoAOD_customizeCommon(process):
 #    makePuppiesFromMiniAOD(process,True) # call this here as it calls switchOnVIDPhotonIdProducer
     process = nanoAOD_activateVID(process)
@@ -316,6 +325,7 @@ def nanoAOD_customizeData(process):
     process = nanoAOD_recalibrateMETs(process,isData=True)
     for modifier in run2_nanoAOD_94XMiniAODv1, run2_nanoAOD_94XMiniAODv2:
         modifier.toModify(process, lambda p: nanoAOD_runMETfixEE2017(p,isData=True))
+    run2_nanoAOD_106Xv1.toModify(process, lambda p: nanoAOD_runULprotonTables(p))
     return process
 
 def nanoAOD_customizeMC(process):
@@ -340,6 +350,13 @@ _102x_sequence = nanoSequenceCommon.copy()
 #add stuff
 _102x_sequence.insert(_102x_sequence.index(jetSequence),extraFlagsProducers102x)
 _102x_sequence.insert(_102x_sequence.index(simpleCleanerTable)+1,extraFlagsTable)
+#_102x_sequence.insert(_102x_sequence.index(isoTrackTables)+1,protonTables)
+#_102x_sequence.insert(_102x_sequence.index(isoTrackTables)+2,lhcInfoTable)
 
-for modifier in run2_nanoAOD_94XMiniAODv1, run2_nanoAOD_94XMiniAODv2, run2_nanoAOD_102Xv1:
+#_106x_sequence = nanoSequenceCommon.copy()
+#add stuff
+#_106x_sequence.insert(_106x_sequence.index(isoTrackTables)+1,protonTables)
+#_106x_sequence.insert(_106x_sequence.index(isoTrackTables)+2,lhcInfoTable)
+
+for modifier in run2_nanoAOD_94XMiniAODv1, run2_nanoAOD_94XMiniAODv2, run2_nanoAOD_102Xv1:#, run2_nanoAOD_106Xv1:
     modifier.toReplaceWith(nanoSequenceCommon, _102x_sequence)
