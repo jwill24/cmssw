@@ -34,7 +34,6 @@
 
 #include "DataFormats/NanoAOD/interface/FlatTable.h"
 #include "DataFormats/Common/interface/ValueMap.h"
-#include "DataFormats/Provenance/interface/Provenance.h"
 
 #include "DataFormats/CTPPSDetId/interface/CTPPSDetId.h"
 #include "DataFormats/CTPPSReco/interface/CTPPSLocalTrackLite.h"
@@ -69,21 +68,16 @@ public:
     edm::Handle<reco::ForwardProtonCollection> hRecoProtonsMultiRP;
     iEvent.getByToken(tokenRecoProtonsMultiRP_, hRecoProtonsMultiRP);
 
-    // FIXME: might need to move these inside the loop over handles
     std::vector<int> protonRPId, protonRPType;
     std::vector<bool> singleRP_sector45, singleRP_sector56, multiRP_sector45, multiRP_sector56;
     std::vector<float> trackX, trackXUnc, trackY, trackYUnc, trackTime, trackTimeUnc;
     std::vector<int> singleRP_trackIdx, multiRP_trackIdx, trackDetId, numPlanes, pixelRecoInfo;
+    int detId;
+    bool multiRP_proton = false;
 
     for (const auto &handle : {hRecoProtonsSingleRP, hRecoProtonsMultiRP}) {
 
-      //const edm::Provenance& provenance = *handle.provenance();
-      //const std::string& productInstanceName = provenance.productInstanceName();
-      //std::cout << "" << std::endl;
-      //std::cout << "Looping over " << productInstanceName << " protons" << std::endl;
-
       int num_proton = handle->size();
-      //std::cout << "Num protons: " << num_proton << std::endl;
       int proton_pos = 0;
       protonRPId.reserve( num_proton );
       singleRP_sector45.reserve( num_proton );
@@ -96,124 +90,42 @@ public:
 
 	if (method == 0) { // singleRP protons
 	  CTPPSDetId rpId((*proton.contributingLocalTracks().begin())->getRPId());
-	  protonRPId.push_back( rpId.arm() * 100 + rpId.station() * 10 + rpId.rp() );
+	  detId = (rpId.arm() * 100 + rpId.station() * 10 + rpId.rp() );
+	  protonRPId.push_back( detId );
 	  protonRPType.push_back( rpId.subdetId() );
-	  // FIXME: this could probably be cleaner
-	  if (proton.pz() < 0. ) {
-	    singleRP_sector56.push_back( true );
-	    singleRP_sector45.push_back( false );
-	  }
-	  else if (proton.pz() > 0. ) {
-	    singleRP_sector45.push_back( true );
-	    singleRP_sector56.push_back( false );
-	  }
-	  else {
-	    singleRP_sector45.push_back( false );
-	    singleRP_sector56.push_back( false );
-	  }
+	  singleRP_sector45.push_back( (proton.pz() > 0.) ? true : false );
+	  singleRP_sector56.push_back( (proton.pz() < 0.) ? true : false );
 	} 
 	else if (method == 1) { //multiRP protons
-	  if (proton.pz() < 0. ) {
-	    multiRP_sector56.push_back( true );
-	    multiRP_sector45.push_back( false );
-	  }
-	  else if (proton.pz() > 0. ) {
-	    multiRP_sector45.push_back( true );
-	    multiRP_sector56.push_back( false );
-	  }
-	  else {
-	    multiRP_sector45.push_back( false );
-	    multiRP_sector56.push_back( false );
-	  }
+	  if (!multiRP_proton) multiRP_trackIdx = std::vector<int>(trackX.size(),-1);
+	  multiRP_proton = true;
+	  multiRP_sector45.push_back( (proton.pz() > 0.) ? true : false );
+	  multiRP_sector56.push_back( (proton.pz() < 0.) ? true : false );
 	}
-
-
-
-	for (const auto& tr : proton.contributingLocalTracks()) {
-	  CTPPSDetId rpId(tr->getRPId());
-	  singleRP_trackIdx.push_back( (method == 0) ? proton_pos : -1 );
-	  multiRP_trackIdx.push_back( (method == 1) ? proton_pos : -1 );
-	  trackX.push_back( tr->getX() );
-	  trackXUnc.push_back( tr->getXUnc() );
-	  trackY.push_back( tr->getY() );
-	  trackYUnc.push_back( tr->getYUnc() );
-	  trackTime.push_back( tr->getTime() );
-	  trackTimeUnc.push_back( tr->getTimeUnc() );
-	  trackDetId.push_back(rpId.arm() * 100 + rpId.station() * 10 + rpId.rp());
-	  numPlanes.push_back( tr->getNumberOfPointsUsedForFit() );
-	  pixelRecoInfo.push_back( static_cast<int>(tr->getPixelTrackRecoInfo()) );
-	} // End loop over tracks
+      
+	for (const auto& tr : proton.contributingLocalTracks()) { // PPSLocalTracks
+	  if (method == 0) {
+	    singleRP_trackIdx.push_back( proton_pos );
+	    trackX.push_back( tr->getX() );
+	    trackXUnc.push_back( tr->getXUnc() );
+	    trackY.push_back( tr->getY() );
+	    trackYUnc.push_back( tr->getYUnc() );
+	    trackTime.push_back( tr->getTime() );
+	    trackTimeUnc.push_back( tr->getTimeUnc() );
+	    trackDetId.push_back( detId );
+	    numPlanes.push_back( tr->getNumberOfPointsUsedForFit() );
+	    pixelRecoInfo.push_back( static_cast<int>(tr->getPixelTrackRecoInfo()) );
+	  } else if (method == 1) {
+	    auto it = std::find(trackX.begin(), trackX.end(), tr->getX() );
+	    int index = std::distance(trackX.begin(), it);
+	    multiRP_trackIdx[index] = proton_pos;
+	  }
+	} 
 	proton_pos++;
-      } // End loop over protons
-    } // End loop over handles
-
-
-
-
-
-    // Check for duplicate tracks before filling
-    if (trackX.size() > 1) {
-      std::vector<float> tmpX = trackX;
-      std::vector<float> duplicate_x;    
-      std::sort(tmpX.begin(), tmpX.end());
-      
-      for (auto x = trackX.begin(); x != trackX.end(); ++x) std::cout << "trackX: " << *x << std::endl;
-      
-      for (unsigned int i = 0; i < tmpX.size()-1; i++) {
-	if (tmpX[i] == tmpX[i+1]) {
-	  duplicate_x.push_back(tmpX[i]); // Duplicate track
-	}
-      }
-
-      
-      // Get positions of duplicates
-      for (auto dup_val = duplicate_x.begin(); dup_val != duplicate_x.end(); ++dup_val) {
-	std::cout << "Duplicate x: " << *dup_val << std::endl;	
-	
-	auto it_single = std::find(trackX.begin(), trackX.end(), *dup_val);
-	auto it_multi = std::find(it_single+1, trackX.end(), *dup_val); 
-	int singleRP_index = std::distance(trackX.begin(), it_single);
-	int multiRP_index  = std::distance(trackX.begin(), it_multi);
-	std::cout << "singleRP_index: " << singleRP_index << " multiRP_index: " << multiRP_index  << std::endl;
-
-	std::cout << "Changing the Idx of the proton" << std::endl;
-	
-	// Change the Idx of the proton to keep
-	std::cout << "Current singleRP_trackIdx: " << std::endl;
-	for (auto id = singleRP_trackIdx.begin(); id != singleRP_trackIdx.end(); ++id) std::cout <<  *id << std::endl;
-	std::cout << "Current multiRP_trackIdx: " << std::endl;
-	for (auto id = multiRP_trackIdx.begin(); id != multiRP_trackIdx.end(); ++id) std::cout <<  *id << std::endl;
-
-	singleRP_trackIdx.erase(singleRP_trackIdx.begin()+multiRP_index); // FIXME: I don't think this works in general
-	multiRP_trackIdx.erase(multiRP_trackIdx.begin()+singleRP_index); // FIXME: I don't think this works in general
-
-	std::cout << "New singleRP_trackIdx: " << std::endl;;
-	for (auto id = singleRP_trackIdx.begin(); id != singleRP_trackIdx.end(); ++id) std::cout <<  *id << std::endl;;
-	std::cout << "New multiRP_trackIdx: " << std::endl;;
-	for (auto id = multiRP_trackIdx.begin(); id != multiRP_trackIdx.end(); ++id) std::cout <<  *id << std::endl;;
-
-	std::cout << "Removing duplicate track info" << std::endl;
-
-	// Remove the chosen track info
-	for (auto x = trackX.begin(); x != trackX.end(); ++x) std::cout << "Current trackX: " << *x << std::endl;
-	trackX.erase(trackX.begin()+multiRP_index);
-	trackXUnc.erase(trackXUnc.begin()+multiRP_index);
-	trackY.erase(trackY.begin()+multiRP_index);
-	trackYUnc.erase(trackYUnc.begin()+multiRP_index);
-	trackTime.erase(trackTime.begin()+multiRP_index);
-	trackTimeUnc.erase(trackTimeUnc.begin()+multiRP_index);
-	trackDetId.erase(trackDetId.begin()+multiRP_index);
-	numPlanes.erase(numPlanes.begin()+multiRP_index);
-	pixelRecoInfo.erase(pixelRecoInfo.begin()+multiRP_index);
-	for (auto x = trackX.begin(); x != trackX.end(); ++x) std::cout << "New trackX: " << *x << std::endl;
-      } // End loop over duplicates
+      } 
     }
 
-
-    
-
-
-
+    while ( multiRP_trackIdx.size() < singleRP_trackIdx.size() ) multiRP_trackIdx.push_back(-1);
 
     auto ppsTab = std::make_unique<nanoaod::FlatTable>(trackX.size(),"PPSLocalTrack",false);
     ppsTab->addColumn<int>("singleRP_trackIdx",singleRP_trackIdx,"local track - proton correspondence",nanoaod::FlatTable::IntColumn);
@@ -261,16 +173,14 @@ public:
 
     iEvent.put(std::move(protonRPIdV), "protonRPId");
     iEvent.put(std::move(protonRPTypeV), "protonRPType");
+
     iEvent.put(std::move(singleRP_sector45V), "singleRPsector45");
     iEvent.put(std::move(singleRP_sector56V), "singleRPsector56");
     iEvent.put(std::move(multiRP_sector45V), "multiRPsector45");
     iEvent.put(std::move(multiRP_sector56V), "multiRPsector56");
+
     iEvent.put(std::move(ppsTab), "ppsTrackTable");
-
-
-  } // End loop over events  
-
-  
+  } 
 
   // ------------ method fills 'descriptions' with the allowed parameters for the module  ------------
   static void fillDescriptions(edm::ConfigurationDescriptions & descriptions) {
