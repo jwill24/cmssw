@@ -70,15 +70,15 @@ public:
 
     std::vector<int> protonRPId, protonRPType;
     std::vector<bool> singleRP_sector45, singleRP_sector56, multiRP_sector45, multiRP_sector56;
-    std::vector<float> trackX, trackXUnc, trackY, trackYUnc, trackTime, trackTimeUnc;
-    std::vector<int> singleRP_trackIdx, multiRP_trackIdx, trackDetId, numPlanes, pixelRecoInfo;
-    int detId;
+    std::vector<float> trackX, trackXUnc, trackY, trackYUnc, trackTime, trackTimeUnc, localSlopeX, localSlopeY, normalizedChi2;
+    std::vector<int> singleRPProtonIdx, multiRPProtonIdx, decRPId, numFitPoints, pixelRecoInfo, rpType;
+    int detId, subDetId;
     bool multiRP_proton = false;
 
     for (const auto &handle : {hRecoProtonsSingleRP, hRecoProtonsMultiRP}) {
 
       int num_proton = handle->size();
-      int proton_pos = 0;
+      int proton_pos = 0; // indexing convention for cross-linking
       protonRPId.reserve( num_proton );
       singleRP_sector45.reserve( num_proton );
       singleRP_sector56.reserve( num_proton );
@@ -91,13 +91,14 @@ public:
 	if (method == 0) { // singleRP protons
 	  CTPPSDetId rpId((*proton.contributingLocalTracks().begin())->getRPId());
 	  detId = (rpId.arm() * 100 + rpId.station() * 10 + rpId.rp() );
+	  subDetId = rpId.subdetId(); // testing
 	  protonRPId.push_back( detId );
 	  protonRPType.push_back( rpId.subdetId() );
 	  singleRP_sector45.push_back( (proton.pz() > 0.) ? true : false );
 	  singleRP_sector56.push_back( (proton.pz() < 0.) ? true : false );
 	} 
 	else if (method == 1) { //multiRP protons
-	  if (!multiRP_proton) multiRP_trackIdx = std::vector<int>(trackX.size(),-1);
+	  if (!multiRP_proton) multiRPProtonIdx = std::vector<int>(trackX.size(),-1);
 	  multiRP_proton = true;
 	  multiRP_sector45.push_back( (proton.pz() > 0.) ? true : false );
 	  multiRP_sector56.push_back( (proton.pz() < 0.) ? true : false );
@@ -105,40 +106,48 @@ public:
       
 	for (const auto& tr : proton.contributingLocalTracks()) { // PPSLocalTracks
 	  if (method == 0) {
-	    singleRP_trackIdx.push_back( proton_pos );
+	    singleRPProtonIdx.push_back( proton_pos );
 	    trackX.push_back( tr->getX() );
 	    trackXUnc.push_back( tr->getXUnc() );
 	    trackY.push_back( tr->getY() );
 	    trackYUnc.push_back( tr->getYUnc() );
 	    trackTime.push_back( tr->getTime() );
 	    trackTimeUnc.push_back( tr->getTimeUnc() );
-	    trackDetId.push_back( detId );
-	    numPlanes.push_back( tr->getNumberOfPointsUsedForFit() );
+	    decRPId.push_back( detId );
+	    numFitPoints.push_back( tr->getNumberOfPointsUsedForFit() );
 	    pixelRecoInfo.push_back( static_cast<int>(tr->getPixelTrackRecoInfo()) );
+	    normalizedChi2.push_back( tr->getChiSquaredOverNDF() );
+	    rpType.push_back( subDetId );
+	    localSlopeX.push_back( tr->getTx() );
+	    localSlopeY.push_back( tr->getTy() );
 	  } else if (method == 1) {
 	    auto it = std::find(trackX.begin(), trackX.end(), tr->getX() );
 	    int index = std::distance(trackX.begin(), it);
-	    multiRP_trackIdx[index] = proton_pos;
+	    multiRPProtonIdx[index] = proton_pos;
 	  }
 	} 
 	proton_pos++;
       } 
     }
 
-    while ( multiRP_trackIdx.size() < singleRP_trackIdx.size() ) multiRP_trackIdx.push_back(-1);
+    while ( multiRPProtonIdx.size() < singleRPProtonIdx.size() ) multiRPProtonIdx.push_back(-1); // fill empy multiRP indices with -1
 
     auto ppsTab = std::make_unique<nanoaod::FlatTable>(trackX.size(),"PPSLocalTrack",false);
-    ppsTab->addColumn<int>("singleRP_trackIdx",singleRP_trackIdx,"local track - proton correspondence",nanoaod::FlatTable::IntColumn);
-    ppsTab->addColumn<int>("multiRP_trackIdx",multiRP_trackIdx,"local track - proton correspondence",nanoaod::FlatTable::IntColumn);
+    ppsTab->addColumn<int>("singleRPProtonIdx",singleRPProtonIdx,"local track - proton correspondence",nanoaod::FlatTable::IntColumn);
+    ppsTab->addColumn<int>("multiRPProtonIdx",multiRPProtonIdx,"local track - proton correspondence",nanoaod::FlatTable::IntColumn);
     ppsTab->addColumn<float>("x",trackX,"local track x",nanoaod::FlatTable::FloatColumn,precision_);
     ppsTab->addColumn<float>("xUnc",trackXUnc,"local track x uncertainty",nanoaod::FlatTable::FloatColumn,precision_);
     ppsTab->addColumn<float>("y",trackY,"local track y",nanoaod::FlatTable::FloatColumn,precision_);
     ppsTab->addColumn<float>("yUnc",trackYUnc,"local track y uncertainty",nanoaod::FlatTable::FloatColumn,precision_);
     ppsTab->addColumn<float>("time",trackTime,"local track time",nanoaod::FlatTable::FloatColumn,precision_);
     ppsTab->addColumn<float>("timeUnc",trackTimeUnc,"local track time uncertainty",nanoaod::FlatTable::FloatColumn,precision_);
-    ppsTab->addColumn<float>("trackDetId",trackDetId,"local track detector id",nanoaod::FlatTable::FloatColumn,precision_);
-    ppsTab->addColumn<int>("numPlanes",numPlanes,"number of points used for fit",nanoaod::FlatTable::IntColumn);
+    ppsTab->addColumn<float>("decRPId",decRPId,"local track detector dec id",nanoaod::FlatTable::FloatColumn,precision_);
+    ppsTab->addColumn<int>("numFitPoints",numFitPoints,"number of points used for fit",nanoaod::FlatTable::IntColumn);
     ppsTab->addColumn<int>("pixelRecoInfo",pixelRecoInfo,"flag if a ROC was shifted by a bunchx",nanoaod::FlatTable::IntColumn);
+    ppsTab->addColumn<float>("normalizedChi2",normalizedChi2,"chi2 over NDF",nanoaod::FlatTable::FloatColumn,precision_);
+    ppsTab->addColumn<int>("rpType",rpType,"strip=3, pixel=4, diamond=5, timing=6",nanoaod::FlatTable::IntColumn);
+    ppsTab->addColumn<float>("localSlopeX",localSlopeX,"track horizontal angle",nanoaod::FlatTable::FloatColumn,precision_);
+    ppsTab->addColumn<float>("localSlopeY",localSlopeY,"track vertical angle",nanoaod::FlatTable::FloatColumn,precision_);
     ppsTab->setDoc("ppsLocalTrack variables");
     
     std::unique_ptr<edm::ValueMap<int>> protonRPIdV(new edm::ValueMap<int>());
@@ -173,12 +182,10 @@ public:
 
     iEvent.put(std::move(protonRPIdV), "protonRPId");
     iEvent.put(std::move(protonRPTypeV), "protonRPType");
-
     iEvent.put(std::move(singleRP_sector45V), "singleRPsector45");
     iEvent.put(std::move(singleRP_sector56V), "singleRPsector56");
     iEvent.put(std::move(multiRP_sector45V), "multiRPsector45");
     iEvent.put(std::move(multiRP_sector56V), "multiRPsector56");
-
     iEvent.put(std::move(ppsTab), "ppsTrackTable");
   } 
 
