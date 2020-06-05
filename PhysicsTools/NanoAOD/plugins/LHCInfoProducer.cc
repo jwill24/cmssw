@@ -76,14 +76,14 @@ public:
   std::unique_ptr<nanoaod::FlatTable> fillTable(const edm::Event &iEvent, const edm::ESHandle<LHCInfo> & prod) const {
     
     const LHCInfo* info = prod.product();
-    float xangle = info->crossingAngle();
+    float crossingAngle = info->crossingAngle();
     float betaStar = info->betaStar();
-    float beamEnergy = info->energy();
+    float energy = info->energy();
 
     auto out = std::make_unique<nanoaod::FlatTable>(1,"LHCInfo",true);
-    out->addColumnValue<float>("xangle", xangle, "LHC crossing angle", nanoaod::FlatTable::FloatColumn,precision_);
+    out->addColumnValue<float>("crossingAngle", crossingAngle, "LHC crossing angle", nanoaod::FlatTable::FloatColumn,precision_);
     out->addColumnValue<float>("betaStar",betaStar,"LHC beta star", nanoaod::FlatTable::FloatColumn,precision_);
-    out->addColumnValue<float>("beamEnergy",beamEnergy,"LHC beam energy", nanoaod::FlatTable::FloatColumn,precision_);
+    out->addColumnValue<float>("energy",energy,"LHC beam energy", nanoaod::FlatTable::FloatColumn,precision_);
     return out;
   }
 
