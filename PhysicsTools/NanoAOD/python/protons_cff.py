@@ -7,6 +7,7 @@ protonTable = cms.EDProducer("ProtonProducer",
                              tagRecoProtonsMulti  = cms.InputTag("ctppsProtons", "multiRP")
 )
 
+
 singleRPTable = cms.EDProducer("SimpleProtonTrackFlatTableProducer",
     src = cms.InputTag("ctppsProtons","singleRP"),
     cut = cms.string(""),
@@ -17,14 +18,11 @@ singleRPTable = cms.EDProducer("SimpleProtonTrackFlatTableProducer",
     variables = cms.PSet(
         xi = Var("xi",float,doc="xi or dp/p",precision=10),
         xiUnc = Var("xiError",float,doc="uncertainty on xi or dp/p",precision=10),
-        #pt = Var("pt",float,doc="pt",precision=10),
         thetaY = Var("thetaY",float,doc="th y",precision=10),
         thetaYUnc = Var("thetaYError",float,doc="theta Y uncertainty",precision=10),
-        #validFit = Var("validFit",bool,doc="valid Fit"),
     ),
     externalVariables = cms.PSet(
         decRPId = ExtVar("protonTable:protonRPId",int,doc="Detector ID",precision=10),
-        #protonRPType = ExtVar("protonTable:protonRPType",int,doc="Sub detector ID",precision=10),
         sector45 = ExtVar("protonTable:singleRPsector45",bool,doc="LHC sector 45"),
         sector56 = ExtVar("protonTable:singleRPsector56",bool,doc="LHC sector 56"),
     ),
