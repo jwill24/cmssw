@@ -49,7 +49,6 @@ public:
     precision_( ps.getParameter<int>("precision") )
   {
     produces<edm::ValueMap<int>>("protonRPId");
-    produces<edm::ValueMap<int>>("protonRPType");
     produces<edm::ValueMap<bool>>("singleRPsector45");
     produces<edm::ValueMap<bool>>("multiRPsector45");
     produces<edm::ValueMap<bool>>("singleRPsector56");
@@ -91,7 +90,7 @@ public:
 	if (method == 0) { // singleRP protons
 	  CTPPSDetId rpId((*proton.contributingLocalTracks().begin())->getRPId());
 	  detId = (rpId.arm() * 100 + rpId.station() * 10 + rpId.rp() );
-	  subDetId = rpId.subdetId(); // testing
+	  subDetId = rpId.subdetId();
 	  protonRPId.push_back( detId );
 	  protonRPType.push_back( rpId.subdetId() );
 	  singleRP_sector45.push_back( (proton.pz() > 0.) ? true : false );
@@ -141,7 +140,7 @@ public:
     ppsTab->addColumn<float>("yUnc",trackYUnc,"local track y uncertainty",nanoaod::FlatTable::FloatColumn,precision_);
     ppsTab->addColumn<float>("time",trackTime,"local track time",nanoaod::FlatTable::FloatColumn,precision_);
     ppsTab->addColumn<float>("timeUnc",trackTimeUnc,"local track time uncertainty",nanoaod::FlatTable::FloatColumn,precision_);
-    ppsTab->addColumn<float>("decRPId",decRPId,"local track detector dec id",nanoaod::FlatTable::FloatColumn,precision_);
+    ppsTab->addColumn<int>("decRPId",decRPId,"local track detector dec id",nanoaod::FlatTable::IntColumn);
     ppsTab->addColumn<int>("numFitPoints",numFitPoints,"number of points used for fit",nanoaod::FlatTable::IntColumn);
     ppsTab->addColumn<int>("pixelRecoInfo",pixelRecoInfo,"flag if a ROC was shifted by a bunchx",nanoaod::FlatTable::IntColumn);
     ppsTab->addColumn<float>("normalizedChi2",normalizedChi2,"chi2 over NDF",nanoaod::FlatTable::FloatColumn,precision_);
@@ -154,11 +153,6 @@ public:
     edm::ValueMap<int>::Filler fillerID(*protonRPIdV);
     fillerID.insert(hRecoProtonsSingleRP, protonRPId.begin(), protonRPId.end());
     fillerID.fill();
-
-    std::unique_ptr<edm::ValueMap<int>> protonRPTypeV(new edm::ValueMap<int>());
-    edm::ValueMap<int>::Filler fillerSubID(*protonRPTypeV);
-    fillerSubID.insert(hRecoProtonsSingleRP, protonRPType.begin(), protonRPType.end());
-    fillerSubID.fill();
 
     std::unique_ptr<edm::ValueMap<bool>> singleRP_sector45V(new edm::ValueMap<bool>());
     edm::ValueMap<bool>::Filler fillersingle45(*singleRP_sector45V);
@@ -181,7 +175,6 @@ public:
     fillermulti56.fill();
 
     iEvent.put(std::move(protonRPIdV), "protonRPId");
-    iEvent.put(std::move(protonRPTypeV), "protonRPType");
     iEvent.put(std::move(singleRP_sector45V), "singleRPsector45");
     iEvent.put(std::move(singleRP_sector56V), "singleRPsector56");
     iEvent.put(std::move(multiRP_sector45V), "multiRPsector45");
