@@ -51,37 +51,45 @@
 
 class LHCInfoProducer : public edm::global::EDProducer<> {
 public:
-  LHCInfoProducer(edm::ParameterSet const& ps) : precision_(ps.getParameter<int>("precision")) {
+  LHCInfoProducer( edm::ParameterSet const & ps) :
+    precision_( ps.getParameter<int>("precision") )
+  {
     produces<nanoaod::FlatTable>("lhcInfoTab");
   }
   ~LHCInfoProducer() override {}
 
+
   // ------------ method called to produce the data  ------------
   void produce(edm::StreamID id, edm::Event& iEvent, const edm::EventSetup& iSetup) const override {
+
     // Get LHCInfo handle
     edm::ESHandle<LHCInfo> lhcInfo;
     iSetup.get<LHCInfoRcd>().get(lhcInfo);
 
     std::unique_ptr<nanoaod::FlatTable> out = fillTable(iEvent, lhcInfo);
-    out->setDoc("LHC crossing angle");
+    out->setDoc("LHC Info");
 
-    iEvent.put(std::move(out), "lhcInfoTab");
+    iEvent.put(std::move(out),"lhcInfoTab");
+
   }
 
-  std::unique_ptr<nanoaod::FlatTable> fillTable(const edm::Event& iEvent, const edm::ESHandle<LHCInfo>& prod) const {
+  std::unique_ptr<nanoaod::FlatTable> fillTable(const edm::Event &iEvent, const edm::ESHandle<LHCInfo> & prod) const {
+    
     const LHCInfo* info = prod.product();
-    float xangle = info->crossingAngle();
+    float crossingAngle = info->crossingAngle();
     float betaStar = info->betaStar();
+    float energy = info->energy();
 
-    auto out = std::make_unique<nanoaod::FlatTable>(1, "LHCInfo", true);
-    out->addColumnValue<float>("xangle", xangle, "LHC crossing angle", nanoaod::FlatTable::FloatColumn, precision_);
-    out->addColumnValue<float>("betaStar", betaStar, "LHC beta star", nanoaod::FlatTable::FloatColumn, precision_);
+    auto out = std::make_unique<nanoaod::FlatTable>(1,"LHCInfo",true);
+    out->addColumnValue<float>("crossingAngle", crossingAngle, "LHC crossing angle", nanoaod::FlatTable::FloatColumn,precision_);
+    out->addColumnValue<float>("betaStar",betaStar,"LHC beta star", nanoaod::FlatTable::FloatColumn,precision_);
+    out->addColumnValue<float>("energy",energy,"LHC beam energy", nanoaod::FlatTable::FloatColumn,precision_);
     return out;
   }
 
   // ------------ method fills 'descriptions' with the allowed parameters for the module  ------------
 
-  static void fillDescriptions(edm::ConfigurationDescriptions& descriptions) {
+  static void fillDescriptions(edm::ConfigurationDescriptions & descriptions) {
     edm::ParameterSetDescription desc;
     desc.setUnknown();
     descriptions.addDefault(desc);
@@ -90,5 +98,6 @@ public:
 protected:
   const unsigned int precision_;
 };
+
 
 DEFINE_FWK_MODULE(LHCInfoProducer);
