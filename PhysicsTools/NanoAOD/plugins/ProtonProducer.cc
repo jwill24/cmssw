@@ -63,12 +63,13 @@ public:
     edm::Handle<reco::ForwardProtonCollection> hRecoProtons;
     iEvent.getByToken(tokenRecoProtons_, hRecoProtons);
 
-    std::vector<int> protonRPId, protonRPType;
+    std::vector<int> protonRPId, protonRPType, decRPId, rpType;
     std::vector<bool> sector45, sector56;
     int num_proton = hRecoProtons->size();
     int proton_pos = 0;
     std::vector<float> trackX, trackXUnc, trackY, trackYUnc, trackTime, trackTimeUnc;
     std::vector<int> trackIdx, numPlanes, pixelRecoInfo;
+    int detId, subDetId;
 
     protonRPId.reserve( num_proton );
     sector45.reserve( num_proton );
@@ -76,6 +77,8 @@ public:
 
     for (const auto &proton : *hRecoProtons) {
       CTPPSDetId rpId((*proton.contributingLocalTracks().begin())->getRPId());
+      detId = (rpId.arm() * 100 + rpId.station() * 10 + rpId.rp() );
+      subDetId = rpId.subdetId();
       protonRPId.push_back( rpId.arm() * 100 + rpId.station() * 10 + rpId.rp() );
       protonRPType.push_back( rpId.subdetId() );
 
@@ -99,6 +102,8 @@ public:
 	trackYUnc.push_back( tr->getYUnc() );
 	trackTime.push_back( tr->getTime() );
 	trackTimeUnc.push_back( tr->getTimeUnc() );
+	decRPId.push_back( detId );
+	rpType.push_back( subDetId );
 	trackIdx.push_back( proton_pos );
 	numPlanes.push_back( tr->getNumberOfPointsUsedForFit() );
 	pixelRecoInfo.push_back( static_cast<int>(tr->getPixelTrackRecoInfo()) );
@@ -111,10 +116,12 @@ public:
     ppsTab->addColumn<float>("xUnc",trackXUnc,"local track x uncertainty",nanoaod::FlatTable::FloatColumn,precision_);
     ppsTab->addColumn<float>("y",trackY,"local track y",nanoaod::FlatTable::FloatColumn,precision_);
     ppsTab->addColumn<float>("yUnc",trackYUnc,"local track y uncertainty",nanoaod::FlatTable::FloatColumn,precision_);
-    if ( method_ == "multiRP" ) {
-      ppsTab->addColumn<float>("time",trackTime,"local track time",nanoaod::FlatTable::FloatColumn,precision_);
-      ppsTab->addColumn<float>("timeUnc",trackTimeUnc,"local track time uncertainty",nanoaod::FlatTable::FloatColumn,precision_);
-    }
+    //if ( method_ == "multiRP" ) {
+    ppsTab->addColumn<float>("time",trackTime,"local track time",nanoaod::FlatTable::FloatColumn,precision_);
+    ppsTab->addColumn<float>("timeUnc",trackTimeUnc,"local track time uncertainty",nanoaod::FlatTable::FloatColumn,precision_);
+      // }
+    ppsTab->addColumn<int>("decRPId",decRPId,"local track detector dec id",nanoaod::FlatTable::IntColumn);
+    ppsTab->addColumn<int>("rpType",rpType,"strip=3, pixel=4, diamond=5, timing=6",nanoaod::FlatTable::IntColumn);
     ppsTab->addColumn<int>("protonIdx",trackIdx,"local track - proton correspondence",nanoaod::FlatTable::IntColumn);
     ppsTab->addColumn<int>("numPlanes",numPlanes,"number of points used for fit",nanoaod::FlatTable::IntColumn);
     ppsTab->addColumn<int>("pixelRecoInfo",pixelRecoInfo,"flag if a ROC was shifted by a bunchx",nanoaod::FlatTable::IntColumn);
