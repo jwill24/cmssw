@@ -46,6 +46,7 @@ public:
   ProtonProducer( edm::ParameterSet const & ps) :
     tokenRecoProtonsSingleRP_(mayConsume<reco::ForwardProtonCollection>(ps.getParameter<edm::InputTag>("tagRecoProtonsSingle"))),
     tokenRecoProtonsMultiRP_(mayConsume<reco::ForwardProtonCollection>(ps.getParameter<edm::InputTag>("tagRecoProtonsMulti"))),
+    tokenTracksLite_(mayConsume<std::vector<CTPPSLocalTrackLite>>(ps.getParameter<edm::InputTag>("tagTrackLite"))),
     precision_( ps.getParameter<int>("precision") )
   {
     produces<edm::ValueMap<int>>("protonRPId");
@@ -67,11 +68,15 @@ public:
     edm::Handle<reco::ForwardProtonCollection> hRecoProtonsMultiRP;
     iEvent.getByToken(tokenRecoProtonsMultiRP_, hRecoProtonsMultiRP);
 
+    // Get PPS Local Track handle
+    edm::Handle<std::vector<CTPPSLocalTrackLite> > ppsTracksLite;
+    iEvent.getByToken( tokenTracksLite_, ppsTracksLite );
+
     std::vector<int> protonRPId, protonRPType;
     std::vector<bool> singleRP_sector45, singleRP_sector56, multiRP_sector45, multiRP_sector56;
     std::vector<float> trackX, trackXUnc, trackY, trackYUnc, trackTime, trackTimeUnc, localSlopeX, localSlopeY, normalizedChi2;
     std::vector<int> singleRPProtonIdx, multiRPProtonIdx, decRPId, numFitPoints, pixelRecoInfo, rpType;
-    int detId, subDetId;
+    int detId, subdetId;
     bool multiRP_proton = false;
 
     for (const auto &handle : {hRecoProtonsSingleRP, hRecoProtonsMultiRP}) {
@@ -90,7 +95,7 @@ public:
 	if (method == 0) { // singleRP protons
 	  CTPPSDetId rpId((*proton.contributingLocalTracks().begin())->getRPId());
 	  detId = (rpId.arm() * 100 + rpId.station() * 10 + rpId.rp() );
-	  subDetId = rpId.subdetId();
+	  subdetId = rpId.subdetId();
 	  protonRPId.push_back( detId );
 	  protonRPType.push_back( rpId.subdetId() );
 	  singleRP_sector45.push_back( (proton.pz() > 0.) ? true : false );
@@ -116,7 +121,7 @@ public:
 	    numFitPoints.push_back( tr->getNumberOfPointsUsedForFit() );
 	    pixelRecoInfo.push_back( static_cast<int>(tr->getPixelTrackRecoInfo()) );
 	    normalizedChi2.push_back( tr->getChiSquaredOverNDF() );
-	    rpType.push_back( subDetId );
+	    rpType.push_back( subdetId );
 	    localSlopeX.push_back( tr->getTx() );
 	    localSlopeY.push_back( tr->getTy() );
 	  } else if (method == 1) {
@@ -130,6 +135,29 @@ public:
     }
 
     while ( multiRPProtonIdx.size() < singleRPProtonIdx.size() ) multiRPProtonIdx.push_back(-1); // fill empy multiRP indices with -1
+
+    for ( const auto& trk : *ppsTracksLite ) { // Store PPS timing tracks
+      CTPPSDetId rpId(trk.getRPId());
+      int detId = (rpId.arm() * 100 + rpId.station() * 10 + rpId.rp() );
+      if (detId == 16 or detId == 116) {
+	singleRPProtonIdx.push_back(-1);
+	multiRPProtonIdx.push_back(-1);
+	trackX.push_back( trk.getX() );
+	trackXUnc.push_back( trk.getXUnc() );
+	trackY.push_back( trk.getY() );
+	trackYUnc.push_back( trk.getYUnc() );
+	trackTime.push_back( trk.getTime() );
+	trackTimeUnc.push_back( trk.getTimeUnc() );
+	decRPId.push_back( rpId.arm() * 100 + rpId.station() * 10 + rpId.rp() );
+	numFitPoints.push_back( trk.getNumberOfPointsUsedForFit() );
+	pixelRecoInfo.push_back( static_cast<int>(trk.getPixelTrackRecoInfo()) );
+	normalizedChi2.push_back( trk.getChiSquaredOverNDF() );
+	rpType.push_back( rpId.subdetId() );
+	localSlopeX.push_back( trk.getTx() );
+	localSlopeY.push_back( trk.getTy() );
+      }
+    }
+
 
     auto ppsTab = std::make_unique<nanoaod::FlatTable>(trackX.size(),"PPSLocalTrack",false);
     ppsTab->addColumn<int>("singleRPProtonIdx",singleRPProtonIdx,"local track - proton correspondence",nanoaod::FlatTable::IntColumn);
@@ -192,6 +220,7 @@ public:
 protected:
   const edm::EDGetTokenT<reco::ForwardProtonCollection> tokenRecoProtonsSingleRP_;
   const edm::EDGetTokenT<reco::ForwardProtonCollection> tokenRecoProtonsMultiRP_;
+  const edm::EDGetTokenT<std::vector<CTPPSLocalTrackLite> > tokenTracksLite_;
   const unsigned int precision_;
 };
 
