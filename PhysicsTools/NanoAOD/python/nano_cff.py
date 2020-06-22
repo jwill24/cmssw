@@ -115,14 +115,13 @@ genWeightsTable = cms.EDProducer("GenWeightsTableProducer",
     maxPdfWeights = cms.uint32(150), 
     debug = cms.untracked.bool(False),
 )
+lhcInfoTable = cms.EDProducer("LHCInfoProducer",
+                              precision = cms.int32(10),
+)
 lheInfoTable = cms.EDProducer("LHETablesProducer",
     lheInfo = cms.VInputTag(cms.InputTag("externalLHEProducer"), cms.InputTag("source")),
     precision = cms.int32(14),
     storeLHEParticles = cms.bool(True) 
-)
-
-lhcInfoTable = cms.EDProducer("LHCInfoProducer",
-                              precision = cms.int32(10),
 )
 
 l1bits=cms.EDProducer("L1TriggerResultsConverter", src=cms.InputTag("gtStage2Digis"), legacyL1=cms.bool(False),
@@ -136,8 +135,9 @@ nanoSequenceCommon = cms.Sequence(
         jetTables + muonTables + tauTables + electronTables + photonTables +  globalTables +vertexTables+ metTables+simpleCleanerTable + isoTrackTables
         )
 nanoSequenceOnlyFullSim = cms.Sequence(triggerObjectTables + l1bits)
+nanoSequenceOnlyData = cms.Sequence(protonTables + lhcInfoTable)
 
-nanoSequence = cms.Sequence(nanoSequenceCommon + nanoSequenceOnlyFullSim)
+nanoSequence = cms.Sequence(nanoSequenceCommon + nanoSequenceOnlyData + nanoSequenceOnlyFullSim)
 
 nanoSequenceFS = cms.Sequence(genParticleSequence + particleLevelSequence + nanoSequenceCommon + jetMC + muonMC + electronMC + photonMC + tauMC + metMC + ttbarCatMCProducers +  globalTablesMC + btagWeightTable + genWeightsTable + genParticleTables + particleLevelTables + lheInfoTable  + ttbarCategoryTable )
 
@@ -275,9 +275,9 @@ def nanoAOD_runMETfixEE2017(process,isData):
                                postfix = "FixEE2017")
     process.nanoSequenceCommon.insert(process.nanoSequenceCommon.index(jetSequence),process.fullPatMetSequenceFixEE2017)
 
-def nanoAOD_runULprotonTables(process):
-    process.nanoSequenceCommon.insert(process.nanoSequenceCommon.index(jetSequence),protonTables)
-    process.nanoSequenceCommon.insert(process.nanoSequenceCommon.index(jetSequence)+1,lhcInfoTable)
+#def nanoAOD_runULprotonTables(process):
+#    process.nanoSequenceCommon.insert(process.nanoSequenceCommon.index(jetSequence),protonTables)
+#    process.nanoSequenceCommon.insert(process.nanoSequenceCommon.index(jetSequence)+1,lhcInfoTable)
 
 def nanoAOD_customizeCommon(process):
 #    makePuppiesFromMiniAOD(process,True) # call this here as it calls switchOnVIDPhotonIdProducer
@@ -325,7 +325,7 @@ def nanoAOD_customizeData(process):
     process = nanoAOD_recalibrateMETs(process,isData=True)
     for modifier in run2_nanoAOD_94XMiniAODv1, run2_nanoAOD_94XMiniAODv2:
         modifier.toModify(process, lambda p: nanoAOD_runMETfixEE2017(p,isData=True))
-    run2_nanoAOD_106Xv1.toModify(process, lambda p: nanoAOD_runULprotonTables(p))
+    #run2_nanoAOD_106Xv1.toModify(process, lambda p: nanoAOD_runULprotonTables(p))
     return process
 
 def nanoAOD_customizeMC(process):
