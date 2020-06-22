@@ -69,18 +69,18 @@ public:
     int proton_pos = 0;
     std::vector<float> trackX, trackXUnc, trackY, trackYUnc, trackTime, trackTimeUnc;
     std::vector<int> trackIdx, numPlanes, pixelRecoInfo;
-    int detId, subDetId;
+    //int detId, subDetId;
 
     protonRPId.reserve( num_proton );
     sector45.reserve( num_proton );
     sector56.reserve( num_proton );
 
     for (const auto &proton : *hRecoProtons) {
-      CTPPSDetId rpId((*proton.contributingLocalTracks().begin())->getRPId());
-      detId = (rpId.arm() * 100 + rpId.station() * 10 + rpId.rp() );
-      subDetId = rpId.subdetId();
-      protonRPId.push_back( rpId.arm() * 100 + rpId.station() * 10 + rpId.rp() );
-      protonRPType.push_back( rpId.subdetId() );
+      CTPPSDetId rpID((*proton.contributingLocalTracks().begin())->getRPId());
+      //int detId = (rpId.arm() * 100 + rpId.station() * 10 + rpId.rp() );
+      //int subDetId = rpId.subdetId();
+      protonRPId.push_back( rpID.arm() * 100 + rpID.station() * 10 + rpID.rp() );
+      protonRPType.push_back( rpID.subdetId() );
 
       if (proton.pz() < 0. ) {
 	sector56.push_back( true );
@@ -96,6 +96,9 @@ public:
       }
 
       for (const auto& tr : proton.contributingLocalTracks()) {
+	CTPPSDetId rpId(tr->getRPId());
+	int detId = (rpId.arm() * 100 + rpId.station() * 10 + rpId.rp() );
+	int subDetId = rpId.subdetId();
 	trackX.push_back( tr->getX() );
 	trackXUnc.push_back( tr->getXUnc() );
 	trackY.push_back( tr->getY() );
