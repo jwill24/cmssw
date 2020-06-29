@@ -73,7 +73,7 @@ public:
     iEvent.getByToken( tokenTracksLite_, ppsTracksLite );
 
     // book output variables for protons
-    std::vector<int> singleRP_RPId, singleRP_RPType;
+    std::vector<int> singleRP_RPId;
     std::vector<bool> singleRP_sector45, singleRP_sector56, multiRP_sector45, multiRP_sector56;
 
     // book output variables for tracks
@@ -93,7 +93,6 @@ public:
         CTPPSDetId rpId((*proton.contributingLocalTracks().begin())->getRPId());
         unsigned int rpDecId = rpId.arm() * 100 + rpId.station() * 10 + rpId.rp();
         singleRP_RPId.push_back(rpDecId);
-        singleRP_RPType.push_back(rpId.subdetId());
         singleRP_sector45.push_back( (proton.pz() > 0.) ? true : false );
         singleRP_sector56.push_back( (proton.pz() < 0.) ? true : false );
       }
