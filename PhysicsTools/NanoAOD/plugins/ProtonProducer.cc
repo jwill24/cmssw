@@ -84,7 +84,6 @@ public:
     {
       const auto &num_proton = hRecoProtonsSingleRP->size();
       singleRP_RPId.reserve( num_proton );
-      singleRP_RPType.reserve( num_proton );
       singleRP_sector45.reserve( num_proton );
       singleRP_sector56.reserve( num_proton );
 
