@@ -2,7 +2,7 @@ import FWCore.ParameterSet.Config as cms
 from PhysicsTools.NanoAOD.common_cff import *
 
 protonTable = cms.EDProducer("ProtonProducer",
-                             precision = cms.int32(14),
+                             precision = cms.int32(10),
                              tagRecoProtonsSingle = cms.InputTag("ctppsProtons", "singleRP"),
                              tagRecoProtonsMulti  = cms.InputTag("ctppsProtons", "multiRP"),
                              tagTrackLite         = cms.InputTag("ctppsLocalTrackLiteProducer")
