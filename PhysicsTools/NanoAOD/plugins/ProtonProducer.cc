@@ -47,7 +47,6 @@ public:
     tokenRecoProtonsSingleRP_(mayConsume<reco::ForwardProtonCollection>(ps.getParameter<edm::InputTag>("tagRecoProtonsSingle"))),
     tokenRecoProtonsMultiRP_(mayConsume<reco::ForwardProtonCollection>(ps.getParameter<edm::InputTag>("tagRecoProtonsMulti"))),
     tokenTracksLite_(mayConsume<std::vector<CTPPSLocalTrackLite>>(ps.getParameter<edm::InputTag>("tagTrackLite"))),
-    precision_( ps.getParameter<int>("precision") )
   {
     produces<edm::ValueMap<int>>("protonRPId");
     produces<edm::ValueMap<bool>>("singleRPsector45");
@@ -190,19 +189,19 @@ public:
     auto ppsTab = std::make_unique<nanoaod::FlatTable>(trackX.size(), "PPSLocalTrack", false);
     ppsTab->addColumn<int>("singleRPProtonIdx",singleRPProtonIdx,"local track - proton correspondence",nanoaod::FlatTable::IntColumn);
     ppsTab->addColumn<int>("multiRPProtonIdx",multiRPProtonIdx,"local track - proton correspondence",nanoaod::FlatTable::IntColumn);
-    ppsTab->addColumn<float>("x",trackX,"local track x",nanoaod::FlatTable::FloatColumn,precision_);
-    ppsTab->addColumn<float>("xUnc",trackXUnc,"local track x uncertainty",nanoaod::FlatTable::FloatColumn,precision_);
-    ppsTab->addColumn<float>("y",trackY,"local track y",nanoaod::FlatTable::FloatColumn,precision_);
-    ppsTab->addColumn<float>("yUnc",trackYUnc,"local track y uncertainty",nanoaod::FlatTable::FloatColumn,precision_);
-    ppsTab->addColumn<float>("time",trackTime,"local track time",nanoaod::FlatTable::FloatColumn,precision_);
-    ppsTab->addColumn<float>("timeUnc",trackTimeUnc,"local track time uncertainty",nanoaod::FlatTable::FloatColumn,precision_);
+    ppsTab->addColumn<float>("x",trackX,"local track x",nanoaod::FlatTable::FloatColumn,16);
+    ppsTab->addColumn<float>("xUnc",trackXUnc,"local track x uncertainty",nanoaod::FlatTable::FloatColumn,8);
+    ppsTab->addColumn<float>("y",trackY,"local track y",nanoaod::FlatTable::FloatColumn,13);
+    ppsTab->addColumn<float>("yUnc",trackYUnc,"local track y uncertainty",nanoaod::FlatTable::FloatColumn,8);
+    ppsTab->addColumn<float>("time",trackTime,"local track time",nanoaod::FlatTable::FloatColumn,16);
+    ppsTab->addColumn<float>("timeUnc",trackTimeUnc,"local track time uncertainty",nanoaod::FlatTable::FloatColumn,13);
     ppsTab->addColumn<int>("decRPId",decRPId,"local track detector dec id",nanoaod::FlatTable::IntColumn);
     ppsTab->addColumn<int>("numFitPoints",numFitPoints,"number of points used for fit",nanoaod::FlatTable::IntColumn);
     ppsTab->addColumn<int>("pixelRecoInfo",pixelRecoInfo,"flag if a ROC was shifted by a bunchx",nanoaod::FlatTable::IntColumn);
-    ppsTab->addColumn<float>("normalizedChi2",normalizedChi2,"chi2 over NDF",nanoaod::FlatTable::FloatColumn,precision_);
+    ppsTab->addColumn<float>("normalizedChi2",normalizedChi2,"chi2 over NDF",nanoaod::FlatTable::FloatColumn,8);
     ppsTab->addColumn<int>("rpType",rpType,"strip=3, pixel=4, diamond=5, timing=6",nanoaod::FlatTable::IntColumn);
-    ppsTab->addColumn<float>("localSlopeX",localSlopeX,"track horizontal angle",nanoaod::FlatTable::FloatColumn,precision_);
-    ppsTab->addColumn<float>("localSlopeY",localSlopeY,"track vertical angle",nanoaod::FlatTable::FloatColumn,precision_);
+    ppsTab->addColumn<float>("localSlopeX",localSlopeX,"track horizontal angle",nanoaod::FlatTable::FloatColumn,11);
+    ppsTab->addColumn<float>("localSlopeY",localSlopeY,"track vertical angle",nanoaod::FlatTable::FloatColumn,11);
     ppsTab->setDoc("ppsLocalTrack variables");
     
     // save output
@@ -225,7 +224,6 @@ protected:
   const edm::EDGetTokenT<reco::ForwardProtonCollection> tokenRecoProtonsSingleRP_;
   const edm::EDGetTokenT<reco::ForwardProtonCollection> tokenRecoProtonsMultiRP_;
   const edm::EDGetTokenT<std::vector<CTPPSLocalTrackLite> > tokenTracksLite_;
-  const unsigned int precision_;
 };
 
 
