@@ -101,11 +101,11 @@ bool CSCCorrelatedLCTDigi::getEightStrip() const { return (strip >> kEightStripS
 /// return the fractional strip
 float CSCCorrelatedLCTDigi::getFractionalStrip(const uint16_t n) const {
   if (n == 8) {
-    return 0.125f * (getStrip() + 1) - 0.0625f;
+    return 0.125f * (getStrip(n) + 1) - 0.0625f;
   } else if (n == 4) {
-    return 0.25f * (getStrip() + 1) - 0.125f;
+    return 0.25f * (getStrip(n) + 1) - 0.125f;
   } else {
-    return 0.5f * (getStrip() + 1) - 0.25f;
+    return 0.5f * (getStrip(n) + 1) - 0.25f;
   }
 }
 
@@ -133,7 +133,8 @@ void CSCCorrelatedLCTDigi::print() const {
                                 << " Quality = " << getQuality() << " Key Wire = " << getKeyWG()
                                 << " Strip = " << getStrip() << " Pattern = " << getPattern()
                                 << " Bend = " << ((getBend() == 0) ? 'L' : 'R') << " BX = " << getBX()
-                                << " MPC Link = " << getMPCLink() << " HMT Bit = " << getHMT();
+                                << " MPC Link = " << getMPCLink() << " Type (SIM) = " << getType()
+                                << " HMT Bit = " << getHMT();
   } else {
     edm::LogVerbatim("CSCDigi") << "Not a valid correlated LCT.";
   }
@@ -141,9 +142,11 @@ void CSCCorrelatedLCTDigi::print() const {
 
 std::ostream& operator<<(std::ostream& o, const CSCCorrelatedLCTDigi& digi) {
   return o << "CSC LCT #" << digi.getTrknmb() << ": Valid = " << digi.isValid() << " Quality = " << digi.getQuality()
-           << " MPC Link = " << digi.getMPCLink() << " cscID = " << digi.getCSCID() << "\n"
+           << " MPC Link = " << digi.getMPCLink() << " cscID = " << digi.getCSCID()
+           << " syncErr = " << digi.getSyncErr() << " Type (SIM) = " << digi.getType() << " HMT Bit = " << digi.getHMT()
+           << "\n"
            << "  cathode info: Strip = " << digi.getStrip() << " Pattern = " << digi.getPattern()
            << " Bend = " << ((digi.getBend() == 0) ? 'L' : 'R') << "\n"
-           << "    anode info: Key wire = " << digi.getKeyWG() << " BX = " << digi.getBX() << " bx0 = " << digi.getBX0()
-           << " syncErr = " << digi.getSyncErr() << " HMT Bit = " << digi.getHMT() << "\n";
+           << "    anode info: Key wire = " << digi.getKeyWG() << " BX = " << digi.getBX()
+           << " bx0 = " << digi.getBX0();
 }

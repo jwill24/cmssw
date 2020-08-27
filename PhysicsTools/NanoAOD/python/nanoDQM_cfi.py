@@ -32,6 +32,20 @@ nanoDQM = DQMEDAnalyzer("NanoAODDQM",
                 Plot1D('rawPt', 'rawPt', 20, 5, 25, "pt()*jecFactor('Uncorrected')"),
             )
         ),
+        DeepMETResolutionTune = cms.PSet(
+            sels = cms.PSet(),
+            plots = cms.VPSet(
+                Plot1D('phi', 'phi', 20, -3.14159, 3.14159, 'Deep MET Resolution Tune phi'),
+                Plot1D('pt', 'pt', 20, 0, 400, 'Deep MET Response Tune pt'),
+            )
+        ),
+        DeepMETResponseTune = cms.PSet(
+            sels = cms.PSet(),
+            plots = cms.VPSet(
+                Plot1D('phi', 'phi', 20, -3.14159, 3.14159, 'Deep MET Response Tune phi'),
+                Plot1D('pt', 'pt', 20, 0, 400, 'Deep MET Response Tune pt'),
+            )
+        ),
         Electron = cms.PSet(
             sels = cms.PSet(
                 Good = cms.string('pt > 15 && abs(dxy) < 0.2 && abs(dz) < 0.5 && cutBased >= 3 && miniPFRelIso_all < 0.4')
@@ -591,6 +605,7 @@ nanoDQM = DQMEDAnalyzer("NanoAODDQM",
                 NoPlot('genPartIdx'),
                 Plot1D('idAntiEle', 'idAntiEle', 32, -0.5, 31.5, 'Anti-electron MVA discriminator V6: bitmask 1 = VLoose, 2 = Loose, 4 = Medium, 8 = Tight, 16 = VTight'),
                 Plot1D('idAntiEle2018', 'idAntiEle2018', 32, -0.5, 31.5, 'Anti-electron MVA discriminator V6 (2018): bitmask 1 = VLoose, 2 = Loose, 4 = Medium, 8 = Tight, 16 = VTight'),
+                Plot1D('idAntiEleDeadECal', 'idAntiEleDeadECal', 2, -0.5, 1.5, "tauID('againstElectronDeadECAL')"),
                 Plot1D('idAntiMu', 'idAntiMu', 4, -0.5, 3.5, 'Anti-muon discriminator V3: : bitmask 1 = Loose, 2 = Tight'),
                 Plot1D('idDecayMode', 'idDecayMode', 2, -0.5, 1.5, "tauID('decayModeFinding')"),
                 Plot1D('idDecayModeNewDMs', 'idDecayModeNewDMs', 2, -0.5, 1.5, "tauID('decayModeFindingNewDMs')"),

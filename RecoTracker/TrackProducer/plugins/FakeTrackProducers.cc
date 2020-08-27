@@ -14,7 +14,7 @@
 #include "FWCore/Framework/interface/EventSetup.h"
 #include "FWCore/ParameterSet/interface/ParameterSet.h"
 #include "FWCore/Utilities/interface/InputTag.h"
-#include "FWCore/Utilities/interface/Range.h"
+#include "FWCore/Utilities/interface/ESGetToken.h"
 
 #include "DataFormats/TrackReco/interface/Track.h"
 #include "DataFormats/TrackReco/interface/TrackExtra.h"
@@ -34,15 +34,6 @@
 #include "Geometry/Records/interface/TrackerDigiGeometryRecord.h"
 #include "Geometry/Records/interface/TrackerTopologyRcd.h"
 #include "MagneticField/Records/interface/IdealMagneticFieldRecord.h"
-#include "DataFormats/TrackingRecHit/interface/TrackingRecHit.h"
-
-namespace {
-  TrajectorySeed::RecHitRange getHits(const TrajectorySeed &seed) { return seed.recHits(); }
-  TrajectorySeed::RecHitRange getHits(const TrackCandidate &seed) {
-    auto range = seed.recHits();
-    return edm::Range{range.first, range.second};
-  }
-}  // namespace
 
 template <class T>
 class FakeTrackProducer : public edm::stream::EDProducer<> {
@@ -55,6 +46,9 @@ public:
 private:
   /// Labels for input collections
   edm::EDGetTokenT<std::vector<T>> src_;
+  edm::ESGetToken<TrackerGeometry, TrackerDigiGeometryRecord> geometryToken_;
+  edm::ESGetToken<MagneticField, IdealMagneticFieldRecord> magFieldToken_;
+  edm::ESGetToken<TrackerTopology, TrackerTopologyRcd> trackerTopoToken_;
 
   /// Muon selection
   //StringCutObjectSelector<T> selector_;
@@ -65,7 +59,10 @@ private:
 
 template <typename T>
 FakeTrackProducer<T>::FakeTrackProducer(const edm::ParameterSet &iConfig)
-    : src_(consumes<std::vector<T>>(iConfig.getParameter<edm::InputTag>("src")))
+    : src_(consumes<std::vector<T>>(iConfig.getParameter<edm::InputTag>("src"))),
+      geometryToken_(esConsumes<TrackerGeometry, TrackerDigiGeometryRecord>()),
+      magFieldToken_(esConsumes<MagneticField, IdealMagneticFieldRecord>()),
+      trackerTopoToken_(esConsumes<TrackerTopology, TrackerTopologyRcd>())
 //,selector_(iConfig.existsAs<std::string>("cut") ? iConfig.getParameter<std::string>("cut") : "", true)
 {
   produces<std::vector<reco::Track>>();
@@ -78,12 +75,9 @@ void FakeTrackProducer<T>::produce(edm::Event &iEvent, const edm::EventSetup &iS
   using namespace edm;
   using namespace std;
 
-  edm::ESHandle<TrackerGeometry> theGeometry;
-  iSetup.get<TrackerDigiGeometryRecord>().get(theGeometry);
-  edm::ESHandle<MagneticField> theMagField;
-  iSetup.get<IdealMagneticFieldRecord>().get(theMagField);
-  edm::ESHandle<TrackerTopology> httopo;
-  iSetup.get<TrackerTopologyRcd>().get(httopo);
+  edm::ESHandle<TrackerGeometry> theGeometry = iSetup.getHandle(geometryToken_);
+  edm::ESHandle<MagneticField> theMagField = iSetup.getHandle(magFieldToken_);
+  edm::ESHandle<TrackerTopology> httopo = iSetup.getHandle(trackerTopoToken_);
   const TrackerTopology &ttopo = *httopo;
 
   Handle<vector<T>> src;
@@ -113,7 +107,7 @@ void FakeTrackProducer<T>::produce(edm::Event &iEvent, const edm::EventSetup &iS
     reco::Track::Vector p(gp.x(), gp.y(), gp.z());
     int charge = state.localParameters().charge();
     out->push_back(reco::Track(1.0, 1.0, x, p, charge, reco::Track::CovarianceMatrix()));
-    auto hits = getHits(mu);
+    auto hits = mu.recHits();
     out->back().appendHits(hits.begin(), hits.end(), ttopo);
     // Now Track Extra
     const TrackingRecHit *hit0 = &*hits.begin();

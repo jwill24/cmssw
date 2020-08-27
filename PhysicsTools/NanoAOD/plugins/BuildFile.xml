@@ -6,8 +6,6 @@
 <use name="DataFormats/Candidate"/>
 <use name="DataFormats/PatCandidates"/>
 <use name="CommonTools/Egamma"/>
-<use name="CommonTools/MVAUtils"/>
-<use name="PhysicsTools/JetMCUtils"/>
 <use name="PhysicsTools/PatAlgos"/>
 <use name="DataFormats/NanoAOD"/>
 <use name="roothistmatrix"/>
@@ -17,6 +15,7 @@
 <use name="IOPool/Provenance"/>
 <use name="DQMServices/Core"/>
 <use name="CondFormats/BTauObjects"/>
+<use name="CondFormats/L1TObjects"/>
 <use name="CondTools/BTau"/>
 <use name="fastjet"/>
 <use name="fastjet-contrib"/>

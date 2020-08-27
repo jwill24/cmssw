@@ -6,6 +6,8 @@
 #include "FWCore/MessageLogger/interface/MessageLogger.h"
 #include "FWCore/Utilities/interface/Exception.h"
 
+#include <memory>
+
 #include <sstream>
 
 using namespace std;
@@ -209,8 +211,10 @@ std::string Tracklet::trackletparstr() {
     if (middleFPGAStub_) {
       str += middleFPGAStub_->stubindex().str() + "|";
     }
-    str += outerFPGAStub_->stubindex().str() + "|" + fpgapars_.rinv().str() + "|" + fpgapars_.phi0().str() + "|" +
-           fpgapars_.d0().str() + "|" + fpgapars_.z0().str() + "|" + fpgapars_.t().str();
+    str += outerFPGAStub_->stubindex().str() + "|" + fpgapars_.rinv().str() + "|" + fpgapars_.phi0().str() + "|";
+    if (middleFPGAStub_)
+      str += fpgapars_.d0().str() + "|";
+    str += fpgapars_.z0().str() + "|" + fpgapars_.t().str();
     return str;
   }
 }
@@ -637,7 +641,7 @@ void Tracklet::setFitPars(double rinvfit,
 
   hitpattern_ = hitpattern;
 
-  fpgatrack_.reset(new Track(makeTrack(l1stubs)));
+  fpgatrack_ = std::make_unique<Track>(makeTrack(l1stubs));
 }
 
 std::string Tracklet::trackfitstr() {

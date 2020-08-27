@@ -8,6 +8,9 @@ import FWCore.ParameterSet.Config as cms
 #  LHE:
 #    include pure LHE production
 #
+#  GEN:
+#    include GEN only information
+#
 #  RAW , RECO, AOD:
 #    include reconstruction content
 #
@@ -145,6 +148,20 @@ LHEEventContent = cms.PSet(
     splitLevel = cms.untracked.int32(0),
 )
 LHEEventContent.outputCommands.extend(GeneratorInterfaceLHE.outputCommands)
+#
+#
+# GEN Data Tier definition
+# include GeneratorInterfaceLHE in case of pLHEGEN campaign
+#
+GENEventContent = cms.PSet(
+    outputCommands = cms.untracked.vstring('drop *'),
+    splitLevel = cms.untracked.int32(0),
+)
+GENEventContent.outputCommands.extend(GeneratorInterfaceLHE.outputCommands)
+GENEventContent.outputCommands.extend(GeneratorInterfaceRAW.outputCommands)
+GENEventContent.outputCommands.extend(RecoGenJetsFEVT.outputCommands)
+GENEventContent.outputCommands.extend(RecoGenMETFEVT.outputCommands)
+GENEventContent.outputCommands.extend(IOMCRAW.outputCommands)
 #
 #
 # RAW Data Tier definition
@@ -478,7 +495,8 @@ phase2_tracker.toModify(FEVTEventContent,
         'keep Phase2TrackerDigiedmDetSetVector_mix_*_*',
         'keep *_TTClustersFromPhase2TrackerDigis_*_*',
         'keep *_TTStubsFromPhase2TrackerDigis_*_*',
-        'keep *_TrackerDTC_*_*'])
+        'keep *_TrackerDTC_*_*',
+        'keep *_*_Level1TTTracks_*'])
 phase2_muon.toModify(FEVTEventContent, 
     outputCommands = FEVTEventContent.outputCommands + ['keep *_muonGEMDigis_*_*'])
 run2_GEM_2017.toModify(FEVTEventContent, 

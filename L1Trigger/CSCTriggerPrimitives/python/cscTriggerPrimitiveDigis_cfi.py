@@ -28,6 +28,22 @@ cscTriggerPrimitiveDigis = cms.EDProducer("CSCTriggerPrimitivesProducer",
     # Write out pre-triggers
     savePreTriggers = cms.bool(False),
 
+    positionLUTFiles = cms.vstring(
+        "L1Trigger/CSCTriggerPrimitives/data/CSCComparatorCodePosOffsetLUT_pat0_ideal_v1.txt",
+        "L1Trigger/CSCTriggerPrimitives/data/CSCComparatorCodePosOffsetLUT_pat1_ideal_v1.txt",
+        "L1Trigger/CSCTriggerPrimitives/data/CSCComparatorCodePosOffsetLUT_pat2_ideal_v1.txt",
+        "L1Trigger/CSCTriggerPrimitives/data/CSCComparatorCodePosOffsetLUT_pat3_ideal_v1.txt",
+        "L1Trigger/CSCTriggerPrimitives/data/CSCComparatorCodePosOffsetLUT_pat4_ideal_v1.txt"
+    ),
+
+    slopeLUTFiles = cms.vstring(
+        "L1Trigger/CSCTriggerPrimitives/data/CSCComparatorCodeSlopeLUT_pat0_v1.txt",
+        "L1Trigger/CSCTriggerPrimitives/data/CSCComparatorCodeSlopeLUT_pat1_v1.txt",
+        "L1Trigger/CSCTriggerPrimitives/data/CSCComparatorCodeSlopeLUT_pat2_v1.txt",
+        "L1Trigger/CSCTriggerPrimitives/data/CSCComparatorCodeSlopeLUT_pat3_v1.txt",
+        "L1Trigger/CSCTriggerPrimitives/data/CSCComparatorCodeSlopeLUT_pat4_v1.txt"
+    ),
+
     # Parameters common for all boards
     commonParam = cms.PSet(
         # Master flag for SLHC studies
@@ -165,6 +181,8 @@ cscTriggerPrimitiveDigis = cms.EDProducer("CSCTriggerPrimitivesProducer",
         useRun3Patterns = cms.bool(False),
 
         useComparatorCodes = cms.bool(False),
+        nBitsPositionCC = cms.uint32(10),
+        nBitsSlopeCC = cms.uint32(5)
     ),
 
     # Parameters for CLCT processors: SLHC studies
@@ -211,6 +229,9 @@ cscTriggerPrimitiveDigis = cms.EDProducer("CSCTriggerPrimitivesProducer",
         useRun3Patterns = cms.bool(False),
 
         useComparatorCodes = cms.bool(False),
+
+        nBitsPositionCC = cms.uint32(10),
+        nBitsSlopeCC = cms.uint32(5)
     ),
 
     tmbParam = cms.PSet(
@@ -506,7 +527,7 @@ phase2_muon.toModify( cscTriggerPrimitiveDigis,
                       alctSLHCME21 = cscTriggerPrimitiveDigis.alctSLHC.clone(alctNplanesHitPattern = 3),
                       clctSLHCME21 = cscTriggerPrimitiveDigis.clctSLHC.clone(clctNplanesHitPattern = 3),
                       me21tmbSLHCGEM = me21tmbSLHCGEM,
-                      alctSLHCME3141 = cscTriggerPrimitiveDigis.alctSLHC.clone(alctNplanesHitPattern = 4),
+                      alctSLHCME3141 = cscTriggerPrimitiveDigis.alctParam07.clone(alctNplanesHitPattern = 4),
                       clctSLHCME3141 = cscTriggerPrimitiveDigis.clctSLHC.clone(clctNplanesHitPattern = 4),
                       meX1tmbSLHC = meX1tmbSLHC,
                       copadParamGE11 = copadParamGE11,
