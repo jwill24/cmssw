@@ -7,7 +7,7 @@ from Configuration.Eras.Modifier_run2_nanoAOD_94X2016_cff import run2_nanoAOD_94
 from Configuration.Eras.Modifier_run2_nanoAOD_102Xv1_cff import run2_nanoAOD_102Xv1
 from RecoPPS.ProtonReconstruction.ppsFilteredProtonProducer_cfi import *
 
-singleRPProtons = False
+singleRPProtons = True
 
 filteredProtons = ppsFilteredProtonProducer.clone(
     protons_single_rp = cms.PSet(
@@ -17,10 +17,11 @@ filteredProtons = ppsFilteredProtonProducer.clone(
 
 protonTable = cms.EDProducer("ProtonProducer",
                              tagRecoProtonsMulti  = cms.InputTag("filteredProtons", "multiRP"),
-                             #tagRecoProtonsSingle = cms.InputTag("filteredProtons", "singleRP"),
+                             tagTrackLite         = cms.InputTag("ctppsLocalTrackLiteProducer"),
                              storeSingleRPProtons = cms.bool(singleRPProtons)
 )
 protonTable.tagRecoProtonsSingle = cms.InputTag("filteredProtons" if singleRPProtons else "ctppsProtons","singleRP")
+
 
 multiRPTable = cms.EDProducer("SimpleProtonTrackFlatTableProducer",
     src = cms.InputTag("filteredProtons","multiRP"),
