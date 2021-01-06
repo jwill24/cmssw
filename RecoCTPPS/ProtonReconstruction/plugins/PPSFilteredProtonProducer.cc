@@ -151,17 +151,17 @@ bool PPSFilteredProtonProducer::IsTrackOK(const CTPPSLocalTrackLite &tr, unsigne
   bool ok = true;
 
   // checks for all tracks
-  ok &= (std::abs(tr.tx()) < tracks_all_local_angle_x_max_);
-  ok &= (std::abs(tr.ty()) < tracks_all_local_angle_y_max_);
+  ok &= (std::abs(tr.getTx()) < tracks_all_local_angle_x_max_);
+  ok &= (std::abs(tr.getTy()) < tracks_all_local_angle_y_max_);
 
   // pixel checks
-  const CTPPSDetId rpId(tr.rpId());
+  const CTPPSDetId rpId(tr.getRPId());
   if (rpId.subdetId() == CTPPSDetId::sdTrackingPixel) {
     ok &= (find(tracks_pixel_forbidden_RecoInfo_values_.begin(),
                 tracks_pixel_forbidden_RecoInfo_values_.end(),
-                (unsigned int)tr.pixelTrackRecoInfo()) == tracks_pixel_forbidden_RecoInfo_values_.end());
-    ok &= (tr.numberOfPointsUsedForFit() >= tracks_pixel_number_of_hits_min_);
-    ok &= (tr.chiSquaredOverNDF() <= tracks_pixel_normalised_chi_sq_max_);
+                (unsigned int)tr.getPixelTrackRecoInfo()) == tracks_pixel_forbidden_RecoInfo_values_.end());
+    ok &= (tr.getNumberOfPointsUsedForFit() >= tracks_pixel_number_of_hits_min_);
+    ok &= (tr.getChiSquaredOverNDF() <= tracks_pixel_normalised_chi_sq_max_);
   }
 
   if (!ok && verbosity_)
