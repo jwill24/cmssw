@@ -19,8 +19,8 @@ class SimpleFlatTableProducerBase : public edm::stream::EDProducer<> {
             name_( params.getParameter<std::string>("name") ),
             doc_(params.existsAs<std::string>("doc") ? params.getParameter<std::string>("doc") : ""),
             extension_(params.existsAs<bool>("extension") ? params.getParameter<bool>("extension") : false),
-	    skipNonExistingSrc_(params.existsAs<bool>("skipNonExistingSrc") ? params.getParameter<bool>("skipNonExistingSrc") : false),
-	    src_(skipNonExistingSrc_ ? mayConsume<TProd>(params.getParameter<edm::InputTag>("src")) : consumes<TProd>(params.getParameter<edm::InputTag>("src"))) {
+			skipNonExistingSrc_(params.existsAs<bool>("skipNonExistingSrc") ? params.getParameter<bool>("skipNonExistingSrc") : false),
+			src_(skipNonExistingSrc_ ? mayConsume<TProd>(params.getParameter<edm::InputTag>("src")) : consumes<TProd>(params.getParameter<edm::InputTag>("src"))) {
         {
             edm::ParameterSet const & varsPSet = params.getParameter<edm::ParameterSet>("variables");
             for (const std::string & vname : varsPSet.getParameterNamesForType<edm::ParameterSet>()) {
@@ -56,7 +56,7 @@ class SimpleFlatTableProducerBase : public edm::stream::EDProducer<> {
         const std::string name_; 
         const std::string doc_;
         const bool extension_;
-	const bool skipNonExistingSrc_;
+		const bool skipNonExistingSrc_;
         const edm::EDGetTokenT<TProd> src_;
 
         class VariableBase {
@@ -139,21 +139,21 @@ class SimpleFlatTableProducer : public SimpleFlatTableProducerBase<T, edm::View<
         std::unique_ptr<nanoaod::FlatTable> fillTable(const edm::Event &iEvent, const edm::Handle<edm::View<T>> & prod) const override {
             std::vector<const T *> selobjs;
             std::vector<edm::Ptr<T>> selptrs; // for external variables
-	    if (prod.isValid() || !(this->skipNonExistingSrc_)) {
-	        if (singleton_) { 
-		    assert(prod->size() == 1);
-		    selobjs.push_back(& (*prod)[0] );
-		    if (!extvars_.empty()) selptrs.emplace_back(prod->ptrAt(0));
-		} else {
-		    for (unsigned int i = 0, n = prod->size(); i < n; ++i) {
-		        const auto & obj = (*prod)[i];
-			if (cut_(obj)) { 
-			    selobjs.push_back(&obj); 
-			    if (!extvars_.empty()) selptrs.emplace_back(prod->ptrAt(i));
-			}
-			if(selobjs.size()>=maxLen_) break;
-		    }
-		}
+			if (prod.isValid() || !(this->skipNonExistingSrc_)) {
+			    if (singleton_) { 
+				    assert(prod->size() == 1);
+					selobjs.push_back(& (*prod)[0] );
+					if (!extvars_.empty()) selptrs.emplace_back(prod->ptrAt(0));
+				} else {
+				    for (unsigned int i = 0, n = prod->size(); i < n; ++i) {
+					    const auto & obj = (*prod)[i];
+						if (cut_(obj)) { 
+						    selobjs.push_back(&obj); 
+							if (!extvars_.empty()) selptrs.emplace_back(prod->ptrAt(i));
+						}
+					  if(selobjs.size()>=maxLen_) break;
+					}
+				}
             }
             auto out = std::make_unique<nanoaod::FlatTable>(selobjs.size(), this->name_, singleton_, this->extension_);
             for (const auto & var : this->vars_) var.fill(selobjs, *out);
