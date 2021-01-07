@@ -175,24 +175,24 @@ class SimpleFlatTableProducer : public SimpleFlatTableProducerBase<T, edm::View<
         template<typename TIn, typename ValType=TIn>
         class ValueMapVariable : public ExtVariable {
             public:
-	        ValueMapVariable(const std::string & aname, nanoaod::FlatTable::ColumnType atype, const edm::ParameterSet & cfg, edm::ConsumesCollector && cc, bool skipNonExistingSrc = false) : 
-	            ExtVariable(aname, cfg),
-	            skipNonExistingSrc_(skipNonExistingSrc),
-	            token_(skipNonExistingSrc_ ? cc.mayConsume<edm::ValueMap<TIn>>(cfg.getParameter<edm::InputTag>("src")) : cc.consumes<edm::ValueMap<TIn>>(cfg.getParameter<edm::InputTag>("src"))) {}
+                ValueMapVariable(const std::string & aname, nanoaod::FlatTable::ColumnType atype, const edm::ParameterSet & cfg, edm::ConsumesCollector && cc, bool skipNonExistingSrc = false) : 
+                    ExtVariable(aname, cfg),
+                    skipNonExistingSrc_(skipNonExistingSrc),
+                    token_(skipNonExistingSrc_ ? cc.mayConsume<edm::ValueMap<TIn>>(cfg.getParameter<edm::InputTag>("src")) : cc.consumes<edm::ValueMap<TIn>>(cfg.getParameter<edm::InputTag>("src"))) {}
                 void fill(const edm::Event & iEvent, std::vector<edm::Ptr<T>> selptrs, nanoaod::FlatTable & out) const override {
                     edm::Handle<edm::ValueMap<TIn>> vmap;
                     iEvent.getByToken(token_, vmap);
                     std::vector<ValType> vals;
-		    if (vmap.isValid() || !skipNonExistingSrc_) {
-		        vals.resize(selptrs.size());   
-			for (unsigned int i = 0, n = vals.size(); i < n; ++i) {
-			    vals[i] = (*vmap)[selptrs[i]];
-			}
-		    }
+                    if (vmap.isValid() || !skipNonExistingSrc_) {
+                        vals.resize(selptrs.size());   
+                        for (unsigned int i = 0, n = vals.size(); i < n; ++i) {
+                            vals[i] = (*vmap)[selptrs[i]];
+                        }
+                    }
                     out.template addColumn<ValType>(this->name_, vals, this->doc_, this->type_, this->precision_);
                 }
             protected:
-	        const bool skipNonExistingSrc_;
+                const bool skipNonExistingSrc_;
                 edm::EDGetTokenT<edm::ValueMap<TIn>> token_;
         };
         typedef ValueMapVariable<int> IntExtVar;
