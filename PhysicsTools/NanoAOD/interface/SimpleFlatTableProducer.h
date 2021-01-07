@@ -19,8 +19,8 @@ class SimpleFlatTableProducerBase : public edm::stream::EDProducer<> {
             name_( params.getParameter<std::string>("name") ),
             doc_(params.existsAs<std::string>("doc") ? params.getParameter<std::string>("doc") : ""),
             extension_(params.existsAs<bool>("extension") ? params.getParameter<bool>("extension") : false),
-			skipNonExistingSrc_(params.existsAs<bool>("skipNonExistingSrc") ? params.getParameter<bool>("skipNonExistingSrc") : false),
-			src_(skipNonExistingSrc_ ? mayConsume<TProd>(params.getParameter<edm::InputTag>("src")) : consumes<TProd>(params.getParameter<edm::InputTag>("src"))) {
+            skipNonExistingSrc_(params.existsAs<bool>("skipNonExistingSrc") ? params.getParameter<bool>("skipNonExistingSrc") : false),
+            src_(skipNonExistingSrc_ ? mayConsume<TProd>(params.getParameter<edm::InputTag>("src")) : consumes<TProd>(params.getParameter<edm::InputTag>("src"))) {
         {
             edm::ParameterSet const & varsPSet = params.getParameter<edm::ParameterSet>("variables");
             for (const std::string & vname : varsPSet.getParameterNamesForType<edm::ParameterSet>()) {
@@ -56,7 +56,7 @@ class SimpleFlatTableProducerBase : public edm::stream::EDProducer<> {
         const std::string name_; 
         const std::string doc_;
         const bool extension_;
-		const bool skipNonExistingSrc_;
+        const bool skipNonExistingSrc_;
         const edm::EDGetTokenT<TProd> src_;
 
         class VariableBase {
