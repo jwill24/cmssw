@@ -80,40 +80,41 @@ private:
             tree.Branch("luminosityBlock", & m_luminosityBlock, "luminosityBlock/i");
             tree.Branch("event", & m_event, "event/l");
          }
-         void fill(const edm::EventID & id) {
-            m_run = id.run(); m_luminosityBlock = id.luminosityBlock(); m_event = id.event();
+         void fill(const edm::EventID & id) { 
+            m_run = id.run(); m_luminosityBlock = id.luminosityBlock(); m_event = id.event(); 
          }
 
-       private:
+     private:
          UInt_t m_run; UInt_t m_luminosityBlock; ULong64_t m_event;
-    } m_commonBranches;
+  } m_commonBranches;
 
-    class CommonLumiBranches {
-       public:
-           void branch(TTree& tree) {
-	       tree.Branch("run", &m_run, "run/i");
-	       tree.Branch("luminosityBlock", &m_luminosityBlock, "luminosityBlock/i");
-           }
-           void fill(const edm::LuminosityBlockID& id) {
-              m_run = id.run();
-              m_luminosityBlock = id.value();
-           }
-       private:
-           UInt_t m_run; UInt_t m_luminosityBlock;
-    } m_commonLumiBranches;
+  class CommonLumiBranches {
+     public:
+         void branch(TTree& tree) {
+             tree.Branch("run", &m_run, "run/i");
+             tree.Branch("luminosityBlock", &m_luminosityBlock, "luminosityBlock/i");
+         }
+         void fill(const edm::LuminosityBlockID& id) {
+            m_run = id.run();
+            m_luminosityBlock = id.value();
+         }
+     private:
+         UInt_t m_run; UInt_t m_luminosityBlock;
+  } m_commonLumiBranches;
 
-    class CommonRunBranches {
-       public:
-           void branch(TTree& tree) { 
-              tree.Branch("run", &m_run, "run/i"); 
-           }
-           void fill(const edm::RunID& id) { 
-              m_run = id.run(); 
-           }
+  class CommonRunBranches {
+     public:
+         void branch(TTree& tree) { 
+            tree.Branch("run", &m_run, "run/i"); 
+         }
+         void fill(const edm::RunID& id) { 
+            m_run = id.run(); 
+         }
 
-  private:
-    UInt_t m_run;
+     private:
+         UInt_t m_run;
   } m_commonRunBranches;
+
 
   std::vector<TableOutputBranches> m_tables;
   std::vector<TriggerOutputBranches> m_triggers;
@@ -123,7 +124,9 @@ private:
   std::vector<SummaryTableOutputBranches> m_lumiTables;
 
   std::vector<std::pair<std::string, edm::EDGetToken>> m_nanoMetadata;
+
 };
+
 
 //
 // constants, enums and typedefs
@@ -136,74 +139,79 @@ private:
 //
 // constructors and destructor
 //
-NanoAODOutputModule::NanoAODOutputModule(edm::ParameterSet const& pset)
-    : edm::one::OutputModuleBase::OutputModuleBase(pset),
-      edm::one::OutputModule<>(pset),
-      m_fileName(pset.getUntrackedParameter<std::string>("fileName")),
-      m_logicalFileName(pset.getUntrackedParameter<std::string>("logicalFileName")),
-      m_compressionLevel(pset.getUntrackedParameter<int>("compressionLevel")),
-      m_compressionAlgorithm(pset.getUntrackedParameter<std::string>("compressionAlgorithm")),
-      m_writeProvenance(pset.getUntrackedParameter<bool>("saveProvenance", true)),
-      m_fakeName(pset.getUntrackedParameter<bool>("fakeNameForCrab", false)),
-      m_autoFlush(pset.getUntrackedParameter<int>("autoFlush", -10000000)),
-      m_processHistoryRegistry() {}
+NanoAODOutputModule::NanoAODOutputModule(edm::ParameterSet const& pset):
+  edm::one::OutputModuleBase::OutputModuleBase(pset),
+  edm::one::OutputModule<>(pset),
+  m_fileName(pset.getUntrackedParameter<std::string>("fileName")),
+  m_logicalFileName(pset.getUntrackedParameter<std::string>("logicalFileName")),
+  m_compressionLevel(pset.getUntrackedParameter<int>("compressionLevel")),
+  m_compressionAlgorithm(pset.getUntrackedParameter<std::string>("compressionAlgorithm")),
+  m_writeProvenance(pset.getUntrackedParameter<bool>("saveProvenance", true)),
+  m_fakeName(pset.getUntrackedParameter<bool>("fakeNameForCrab", false)),
+  m_autoFlush(pset.getUntrackedParameter<int>("autoFlush", -10000000)),
+  m_processHistoryRegistry() 
+  {
+  }
 
-NanoAODOutputModule::~NanoAODOutputModule() {}
+  NanoAODOutputModule::~NanoAODOutputModule() 
+  {
+  }
 
-void NanoAODOutputModule::write(edm::EventForOutput const& iEvent) {
-  //Get data from 'e' and write it to the file
-  edm::Service<edm::JobReport> jr;
-  jr->eventWrittenToFile(m_jrToken, iEvent.id().run(), iEvent.id().event());
+  void 
+  NanoAODOutputModule::write(edm::EventForOutput const& iEvent) {
+    //Get data from 'e' and write it to the file
+    edm::Service<edm::JobReport> jr;
+    jr->eventWrittenToFile(m_jrToken, iEvent.id().run(), iEvent.id().event());
 
-  if (m_autoFlush) {
-    int64_t events = m_tree->GetEntriesFast();
-    if (events == m_firstFlush) {
-      m_tree->FlushBaskets();
-      float maxMemory;
-      if (m_autoFlush > 0) {
-        // Estimate the memory we'll be using at the first full flush by
-        // linearly scaling the number of events.
-        float percentClusterDone = m_firstFlush / static_cast<float>(m_autoFlush);
-        maxMemory = static_cast<float>(m_tree->GetTotBytes()) / percentClusterDone;
-      } else if (m_tree->GetZipBytes() == 0) {
-        maxMemory = 100 * 1024 * 1024;  // Degenerate case of no information in the tree; arbitrary value
-      } else {
-        // Estimate the memory we'll be using by scaling the current compression ratio.
-        float cxnRatio = m_tree->GetTotBytes() / static_cast<float>(m_tree->GetZipBytes());
-        maxMemory = -m_autoFlush * cxnRatio;
-        float percentBytesDone = -m_tree->GetZipBytes() / static_cast<float>(m_autoFlush);
-        m_autoFlush = m_firstFlush / percentBytesDone;
+    if (m_autoFlush) {
+      int64_t events = m_tree->GetEntriesFast();
+      if (events == m_firstFlush) {
+        m_tree->FlushBaskets();
+        float maxMemory;
+        if (m_autoFlush > 0) {
+          // Estimate the memory we'll be using at the first full flush by
+          // linearly scaling the number of events.
+          float percentClusterDone = m_firstFlush / static_cast<float>(m_autoFlush);
+          maxMemory = static_cast<float>(m_tree->GetTotBytes()) / percentClusterDone;
+        } else if (m_tree->GetZipBytes() == 0) {
+          maxMemory = 100 * 1024 * 1024;  // Degenerate case of no information in the tree; arbitrary value
+        } else {
+          // Estimate the memory we'll be using by scaling the current compression ratio.
+          float cxnRatio = m_tree->GetTotBytes() / static_cast<float>(m_tree->GetZipBytes());
+          maxMemory = -m_autoFlush * cxnRatio;
+          float percentBytesDone = -m_tree->GetZipBytes() / static_cast<float>(m_autoFlush);
+          m_autoFlush = m_firstFlush / percentBytesDone;
+        }
+        //std::cout << "OptimizeBaskets: total bytes " << m_tree->GetTotBytes() << std::endl;
+        //std::cout << "OptimizeBaskets: zip bytes " << m_tree->GetZipBytes() << std::endl;
+        //std::cout << "OptimizeBaskets: autoFlush " << m_autoFlush << std::endl;
+        //std::cout << "OptimizeBaskets: maxMemory " << static_cast<uint32_t>(maxMemory) << std::endl;
+        //m_tree->OptimizeBaskets(static_cast<uint32_t>(maxMemory), 1, "d");
+        m_tree->OptimizeBaskets(static_cast<uint32_t>(maxMemory), 1, "");
       }
-      //std::cout << "OptimizeBaskets: total bytes " << m_tree->GetTotBytes() << std::endl;
-      //std::cout << "OptimizeBaskets: zip bytes " << m_tree->GetZipBytes() << std::endl;
-      //std::cout << "OptimizeBaskets: autoFlush " << m_autoFlush << std::endl;
-      //std::cout << "OptimizeBaskets: maxMemory " << static_cast<uint32_t>(maxMemory) << std::endl;
-      //m_tree->OptimizeBaskets(static_cast<uint32_t>(maxMemory), 1, "d");
-      m_tree->OptimizeBaskets(static_cast<uint32_t>(maxMemory), 1, "");
+      if (m_eventsSinceFlush == m_autoFlush) {
+        m_tree->FlushBaskets();
+        m_eventsSinceFlush = 0;
+      }
+      m_eventsSinceFlush++;
     }
-    if (m_eventsSinceFlush == m_autoFlush) {
-      m_tree->FlushBaskets();
-      m_eventsSinceFlush = 0;
+
+    m_commonBranches.fill(iEvent.id());
+    // fill all tables, starting from main tables and then doing extension tables
+    for (unsigned int extensions = 0; extensions <= 1; ++extensions) {
+      for (auto& t : m_tables)
+        t.fill(iEvent, *m_tree, extensions);
     }
-    m_eventsSinceFlush++;
-  }
+    // fill triggers
+    for (auto& t : m_triggers)
+      t.fill(iEvent, *m_tree);
+    // fill event branches
+    for (auto& t : m_evstrings)
+      t.fill(iEvent, *m_tree);
+    m_tree->Fill();
 
-  m_commonBranches.fill(iEvent.id());
-  // fill all tables, starting from main tables and then doing extension tables
-  for (unsigned int extensions = 0; extensions <= 1; ++extensions) {
-    for (auto& t : m_tables)
-      t.fill(iEvent, *m_tree, extensions);
+    m_processHistoryRegistry.registerProcessHistory(iEvent.processHistory());
   }
-  // fill triggers
-  for (auto& t : m_triggers)
-    t.fill(iEvent, *m_tree);
-  // fill event branches
-  for (auto& t : m_evstrings)
-    t.fill(iEvent, *m_tree);
-  m_tree->Fill();
-
-  m_processHistoryRegistry.registerProcessHistory(iEvent.processHistory());
-}
 
 void NanoAODOutputModule::writeLuminosityBlock(edm::LuminosityBlockForOutput const& iLumi) {
   edm::Service<edm::JobReport> jr;
