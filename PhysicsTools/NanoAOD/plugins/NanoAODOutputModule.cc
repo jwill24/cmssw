@@ -2,7 +2,7 @@
 //
 // Package:     PhysicsTools/NanoAODOutput
 // Class  :     NanoAODOutputModule
-//
+// 
 // Implementation:
 //     [Notes on implementation]
 //
@@ -64,7 +64,7 @@ private:
   int m_eventsSinceFlush{0};
   std::string m_compressionAlgorithm;
   bool m_writeProvenance;
-  bool m_fakeName;  //crab workaround, remove after crab is fixed
+  bool m_fakeName; //crab workaround, remove after crab is fixed
   int m_autoFlush;
   edm::ProcessHistoryRegistry m_processHistoryRegistry;
   edm::JobReport::Token m_jrToken;
@@ -74,39 +74,39 @@ private:
   static constexpr int m_firstFlush{1000};
 
   class CommonEventBranches {
-  public:
-    void branch(TTree& tree) {
-      tree.Branch("run", &m_run, "run/i");
-      tree.Branch("luminosityBlock", &m_luminosityBlock, "luminosityBlock/i");
-      tree.Branch("event", &m_event, "event/l");
-    }
-    void fill(const edm::EventID& id) {
-      m_run = id.run();
-      m_luminosityBlock = id.luminosityBlock();
-      m_event = id.event();
-    }
+     public:
+         void branch(TTree& tree) {
+            tree.Branch("run", &m_run, "run/i");
+            tree.Branch("luminosityBlock", &m_luminosityBlock, "luminosityBlock/i");
+            tree.Branch("event", &m_event, "event/l");
+         }
+         void fill(const edm::EventID& id) {
+            m_run = id.run();
+            m_luminosityBlock = id.luminosityBlock();
+            m_event = id.event();
+         }
 
-  private:
-    UInt_t m_run;
-    UInt_t m_luminosityBlock;
-    ULong64_t m_event;
-  } m_commonBranches;
+       private:
+         UInt_t m_run;
+         UInt_t m_luminosityBlock;
+         ULong64_t m_event;
+       } m_commonBranches;
 
-  class CommonLumiBranches {
-  public:
-    void branch(TTree& tree) {
-      tree.Branch("run", &m_run, "run/i");
-      tree.Branch("luminosityBlock", &m_luminosityBlock, "luminosityBlock/i");
-    }
-    void fill(const edm::LuminosityBlockID& id) {
-      m_run = id.run();
-      m_luminosityBlock = id.value();
-    }
+       class CommonLumiBranches {
+          public:
+              void branch(TTree& tree) {
+                 tree.Branch("run", &m_run, "run/i");
+                 tree.Branch("luminosityBlock", &m_luminosityBlock, "luminosityBlock/i");
+              }
+              void fill(const edm::LuminosityBlockID& id) {
+                 m_run = id.run();
+                 m_luminosityBlock = id.value();
+              }
 
-  private:
-    UInt_t m_run;
-    UInt_t m_luminosityBlock;
-  } m_commonLumiBranches;
+            private:
+              UInt_t m_run;
+              UInt_t m_luminosityBlock;
+            } m_commonLumiBranches;
 
   class CommonRunBranches {
   public:
