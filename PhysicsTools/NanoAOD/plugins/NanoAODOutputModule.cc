@@ -75,43 +75,41 @@ private:
 
   class CommonEventBranches {
      public:
-         void branch(TTree& tree) {
-            tree.Branch("run", &m_run, "run/i");
-            tree.Branch("luminosityBlock", &m_luminosityBlock, "luminosityBlock/i");
-            tree.Branch("event", &m_event, "event/l");
+         void branch(TTree &tree) {
+            tree.Branch("run", & m_run, "run/i");
+            tree.Branch("luminosityBlock", & m_luminosityBlock, "luminosityBlock/i");
+            tree.Branch("event", & m_event, "event/l");
          }
-         void fill(const edm::EventID& id) {
-            m_run = id.run();
-            m_luminosityBlock = id.luminosityBlock();
-            m_event = id.event();
+         void fill(const edm::EventID & id) {
+            m_run = id.run(); m_luminosityBlock = id.luminosityBlock(); m_event = id.event();
          }
 
        private:
-         UInt_t m_run;
-         UInt_t m_luminosityBlock;
-         ULong64_t m_event;
-       } m_commonBranches;
+         UInt_t m_run; UInt_t m_luminosityBlock; ULong64_t m_event;
+    } m_commonBranches;
 
-       class CommonLumiBranches {
-          public:
-              void branch(TTree& tree) {
-                 tree.Branch("run", &m_run, "run/i");
-                 tree.Branch("luminosityBlock", &m_luminosityBlock, "luminosityBlock/i");
-              }
-              void fill(const edm::LuminosityBlockID& id) {
-                 m_run = id.run();
-                 m_luminosityBlock = id.value();
-              }
+    class CommonLumiBranches {
+       public:
+           void branch(TTree& tree) {
+	       tree.Branch("run", &m_run, "run/i");
+	       tree.Branch("luminosityBlock", &m_luminosityBlock, "luminosityBlock/i");
+           }
+           void fill(const edm::LuminosityBlockID& id) {
+              m_run = id.run();
+              m_luminosityBlock = id.value();
+           }
+       private:
+           UInt_t m_run; UInt_t m_luminosityBlock;
+    } m_commonLumiBranches;
 
-            private:
-              UInt_t m_run;
-              UInt_t m_luminosityBlock;
-            } m_commonLumiBranches;
-
-  class CommonRunBranches {
-  public:
-    void branch(TTree& tree) { tree.Branch("run", &m_run, "run/i"); }
-    void fill(const edm::RunID& id) { m_run = id.run(); }
+    class CommonRunBranches {
+       public:
+           void branch(TTree& tree) { 
+              tree.Branch("run", &m_run, "run/i"); 
+           }
+           void fill(const edm::RunID& id) { 
+              m_run = id.run(); 
+           }
 
   private:
     UInt_t m_run;
