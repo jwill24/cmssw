@@ -90,8 +90,8 @@ private:
   class CommonLumiBranches {
      public:
          void branch(TTree &tree) {
-             tree.Branch("run", & m_run, "run/i");
-             tree.Branch("luminosityBlock", & m_luminosityBlock, "luminosityBlock/i");
+            tree.Branch("run", & m_run, "run/i");
+            tree.Branch("luminosityBlock", & m_luminosityBlock, "luminosityBlock/i");
          }
          void fill(const edm::LuminosityBlockID & id) { 
             m_run = id.run(); 
@@ -103,13 +103,12 @@ private:
 
   class CommonRunBranches {
      public:
-         void branch(TTree &tree) { 
-            tree.Branch("run", & m_run, "run/i"); 
+         void branch(TTree &tree) {
+            tree.Branch("run", & m_run, "run/i");
          }
          void fill(const edm::RunID & id) { 
             m_run = id.run(); 
          }
-
      private:
          UInt_t m_run;
   } m_commonRunBranches;
@@ -152,7 +151,7 @@ NanoAODOutputModule::NanoAODOutputModule(edm::ParameterSet const& pset):
 {
 }
 
-  NanoAODOutputModule::~NanoAODOutputModule() 
+ NanoAODOutputModule::~NanoAODOutputModule()
 {
 }
 
@@ -173,7 +172,7 @@ NanoAODOutputModule::write(edm::EventForOutput const& iEvent) {
         float percentClusterDone = m_firstFlush / static_cast<float>(m_autoFlush);
         maxMemory = static_cast<float>(m_tree->GetTotBytes()) / percentClusterDone;
       } else if (m_tree->GetZipBytes() == 0) {
-        maxMemory = 100 * 1024 * 1024;  // Degenerate case of no information in the tree; arbitrary value
+        maxMemory = 100*1024*1024;  // Degenerate case of no information in the tree; arbitrary value
       } else {
         // Estimate the memory we'll be using by scaling the current compression ratio.
         float cxnRatio = m_tree->GetTotBytes() / static_cast<float>(m_tree->GetZipBytes());
@@ -198,15 +197,12 @@ NanoAODOutputModule::write(edm::EventForOutput const& iEvent) {
   m_commonBranches.fill(iEvent.id());
   // fill all tables, starting from main tables and then doing extension tables
   for (unsigned int extensions = 0; extensions <= 1; ++extensions) {
-    for (auto& t : m_tables)
-      t.fill(iEvent, *m_tree, extensions);
+      for (auto& t : m_tables) t.fill(iEvent, *m_tree, extensions);
   }
   // fill triggers
-  for (auto& t : m_triggers)
-    t.fill(iEvent, *m_tree);
+  for (auto& t : m_triggers) t.fill(iEvent, *m_tree);
   // fill event branches
-  for (auto& t : m_evstrings)
-    t.fill(iEvent, *m_tree);
+  for (auto& t : m_evstrings) t.fill(iEvent, *m_tree);
   m_tree->Fill();
 
   m_processHistoryRegistry.registerProcessHistory(iEvent.processHistory());
@@ -219,30 +215,31 @@ NanoAODOutputModule::writeLuminosityBlock(edm::LuminosityBlockForOutput const& i
 
   m_commonLumiBranches.fill(iLumi.id());
 
-  for (auto& t : m_lumiTables) t.fill(iLumi, *m_lumiTree);
+  for (auto & t : m_lumiTables) t.fill(iLumi, *m_lumiTree);
 
   m_lumiTree->Fill();
 
   m_processHistoryRegistry.registerProcessHistory(iLumi.processHistory());
 }
 
-void NanoAODOutputModule::writeRun(edm::RunForOutput const& iRun) {
+void 
+NanoAODOutputModule::writeRun(edm::RunForOutput const& iRun) {
   edm::Service<edm::JobReport> jr;
   jr->reportRunNumber(m_jrToken, iRun.id().run());
 
   m_commonRunBranches.fill(iRun.id());
 
-  for (auto& t : m_runTables) t.fill(iRun, *m_runTree);
+  for (auto & t : m_runTables) t.fill(iRun, *m_runTree);
 
   edm::Handle<nanoaod::UniqueString> hstring;
   for (const auto & p : m_nanoMetadata) {
     iRun.getByToken(p.second, hstring);
-    TObjString *tos = dynamic_cast<TObjString*>(m_file->Get(p.first.c_str()));
+    TObjString *tos = dynamic_cast<TObjString *>(m_file->Get(p.first.c_str()));
     if (tos) {
-        if (hstring->str() != tos->GetString()) throw cms::Exception("LogicError", "Inconsistent nanoMetadata " + p.first + " (" + hstring->str() + ")");
+        if (hstring->str() != tos->GetString()) throw cms::Exception("LogicError", "Inconsistent nanoMetadata " + p.first + " (" + hstring->str() +")");
     } else {
         auto ostr = std::make_unique<TObjString>(hstring->str().c_str());
-        m_file->WriteTObject(ostr.release(), p.first.c_str());
+        m_file->WriteTObject(ostr.release(), p.first.c_str()); 
     }
   }
 
@@ -251,12 +248,12 @@ void NanoAODOutputModule::writeRun(edm::RunForOutput const& iRun) {
   m_processHistoryRegistry.registerProcessHistory(iRun.processHistory());
 }
 
-bool
+bool 
 NanoAODOutputModule::isFileOpen() const {
-  return nullptr != m_file.get(); 
+  return nullptr != m_file.get();
 }
 
-void
+void 
 NanoAODOutputModule::openFile(edm::FileBlock const&) {
   m_file = std::make_unique<TFile>(m_fileName.c_str(),"RECREATE","",m_compressionLevel);
   edm::Service<edm::JobReport> jr;
@@ -270,7 +267,7 @@ NanoAODOutputModule::openFile(edm::FileBlock const&) {
                                    std::string(),
                                    branchHash.digest().toString(),
                                    std::vector<std::string>()
-				   );
+                                   );
 
   if (m_compressionAlgorithm == std::string("ZLIB")) {
       m_file->SetCompressionAlgorithm(ROOT::kZLIB);
@@ -279,7 +276,7 @@ NanoAODOutputModule::openFile(edm::FileBlock const&) {
     } else {
       throw cms::Exception("Configuration") << "NanoAODOutputModule configured with unknown compression algorithm '" << m_compressionAlgorithm << "'\n"
                                            << "Allowed compression algorithms are ZLIB and LZMA\n";
-  }
+    }
   /* Setup file structure here */
   m_tables.clear();
   m_triggers.clear();
@@ -287,23 +284,23 @@ NanoAODOutputModule::openFile(edm::FileBlock const&) {
   m_runTables.clear();
   m_lumiTables.clear();
   const auto & keeps = keptProducts();
-  for (const auto& keep : keeps[edm::InEvent]) {
+  for (const auto & keep : keeps[edm::InEvent]) {
       if(keep.first->className() == "nanoaod::FlatTable" )
             m_tables.emplace_back(keep.first, keep.second);
-      else if (keep.first->className() == "edm::TriggerResults" )
+      else if(keep.first->className() == "edm::TriggerResults" )
         {
             m_triggers.emplace_back(keep.first, keep.second);
         }
-      else if (keep.first->className() == "std::basic_string<char,std::char_traits<char> >" && keep.first->productInstanceName() == "genModel") { // friendlyClassName == "String"
+      else if(keep.first->className() == "std::basic_string<char,std::char_traits<char> >" && keep.first->productInstanceName()=="genModel") { // friendlyClassName == "String"
       m_evstrings.emplace_back(keep.first, keep.second, true); // update only at lumiBlock transitions
       }
-      else throw cms::Exception("Configuration", "NanoAODOutputModule cannot handle class " + keep.first->className());
+      else throw cms::Exception("Configuration", "NanoAODOutputModule cannot handle class " + keep.first->className());    
   }
 
-  for (const auto& keep : keeps[edm::InRun]) {
-      if (keep.first->className() == "nanoaod::MergeableCounterTable")
-             m_runTables.push_back(SummaryTableOutputBranches(keep.first, keep.second));
-      else if (keep.first->className() == "nanoaod::UniqueString" && keep.first->moduleLabel() == "nanoMetadata")
+  for (const auto & keep : keeps[edm::InRun]) {
+      if(keep.first->className() == "nanoaod::MergeableCounterTable" )
+            m_runTables.push_back(SummaryTableOutputBranches(keep.first, keep.second));
+      else if(keep.first->className() == "nanoaod::UniqueString" && keep.first->moduleLabel() == "nanoMetadata")
             m_nanoMetadata.emplace_back(keep.first->productInstanceName(), keep.second);
       else throw cms::Exception("Configuration", "NanoAODOutputModule cannot handle class " + keep.first->className() + " in Run branch");
   }
@@ -331,16 +328,16 @@ NanoAODOutputModule::openFile(edm::FileBlock const&) {
   m_commonRunBranches.branch(*m_runTree);
  
   if (m_writeProvenance) {
-      m_metaDataTree.reset(new TTree(edm::poolNames::metaDataTreeName().c_str(), "Job metadata"));
+      m_metaDataTree.reset(new TTree(edm::poolNames::metaDataTreeName().c_str(),"Job metadata"));
       m_metaDataTree->SetAutoSave(0);
-      m_parameterSetsTree.reset(new TTree(edm::poolNames::parameterSetsTreeName().c_str(), "Parameter sets"));
+      m_parameterSetsTree.reset(new TTree(edm::poolNames::parameterSetsTreeName().c_str(),"Parameter sets"));
       m_parameterSetsTree->SetAutoSave(0);
   }
 }
-void
+void 
 NanoAODOutputModule::reallyCloseFile() {
   if (m_writeProvenance) {
-      int basketSize = 16384;  // fixme configurable?
+      int basketSize = 16384; // fixme configurable?
       edm::fillParameterSetBranch(m_parameterSetsTree.get(), basketSize);
       edm::fillProcessHistoryBranch(m_metaDataTree.get(), basketSize, m_processHistoryRegistry);
       if (m_metaDataTree->GetNbranches() != 0) {
@@ -354,15 +351,15 @@ NanoAODOutputModule::reallyCloseFile() {
   m_file->Close();
   m_file.reset();
   m_tree.release();     // apparently root has ownership
-  m_lumiTree.release(); //
-  m_runTree.release(); //
+  m_lumiTree.release(); // 
+  m_runTree.release(); // 
   m_metaDataTree.release(); //
   m_parameterSetsTree.release(); //
   edm::Service<edm::JobReport> jr;
   jr->outputFileClosed(m_jrToken);
 }
 
-void
+void 
 NanoAODOutputModule::fillDescriptions(edm::ConfigurationDescriptions& descriptions) {
   edm::ParameterSetDescription desc;
 
