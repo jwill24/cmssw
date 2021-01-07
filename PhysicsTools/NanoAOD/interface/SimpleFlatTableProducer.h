@@ -99,6 +99,7 @@ class SimpleFlatTableProducerBase : public edm::stream::EDProducer<> {
                 protected:
                     StringFunctor func_;
                     StringFunctor precisionFunc_;
+
             };
         typedef FuncVariable<StringObjectFunction<T>,int> IntVar;
         typedef FuncVariable<StringObjectFunction<T>,float> FloatVar;
@@ -171,7 +172,7 @@ class SimpleFlatTableProducer : public SimpleFlatTableProducerBase<T, edm::View<
                     base::VariableBase(aname, atype, cfg) {}
                 virtual void fill(const edm::Event & iEvent, std::vector<edm::Ptr<T>> selptrs, nanoaod::FlatTable & out) const = 0;
         };
-        template <typename TIn, typename ValType=TIn>
+        template<typename TIn, typename ValType=TIn>
         class ValueMapVariable : public ExtVariable {
             public:
                 ValueMapVariable(const std::string & aname, nanoaod::FlatTable::ColumnType atype, const edm::ParameterSet & cfg, edm::ConsumesCollector && cc, bool skipNonExistingSrc = false) : 
@@ -198,12 +199,13 @@ class SimpleFlatTableProducer : public SimpleFlatTableProducerBase<T, edm::View<
         typedef ValueMapVariable<bool,uint8_t> BoolExtVar;
         typedef ValueMapVariable<int,uint8_t> UInt8ExtVar;
         boost::ptr_vector<ExtVariable> extvars_;
+
 };
 
 template<typename T>
 class EventSingletonSimpleFlatTableProducer : public SimpleFlatTableProducerBase<T,T> {
     public:
-        EventSingletonSimpleFlatTableProducer(edm::ParameterSet const & params ): 
+        EventSingletonSimpleFlatTableProducer( edm::ParameterSet const & params ):
             SimpleFlatTableProducerBase<T,T>(params) {}
 
         ~EventSingletonSimpleFlatTableProducer() override {}
@@ -219,7 +221,7 @@ class EventSingletonSimpleFlatTableProducer : public SimpleFlatTableProducerBase
 template<typename T>
 class FirstObjectSimpleFlatTableProducer : public SimpleFlatTableProducerBase<T, edm::View<T>> {
     public:
-        FirstObjectSimpleFlatTableProducer( edm::ParameterSet const & params ): 
+        FirstObjectSimpleFlatTableProducer( edm::ParameterSet const & params ):
           SimpleFlatTableProducerBase<T, edm::View<T>>(params) {}
 
         ~FirstObjectSimpleFlatTableProducer() override {}
