@@ -200,9 +200,9 @@ NanoAODOutputModule::write(edm::EventForOutput const& iEvent) {
       for (auto & t : m_tables) t.fill(iEvent,*m_tree,extensions);
   }
   // fill triggers
-  for (auto& t : m_triggers) t.fill(iEvent,*m_tree);
+  for (auto & t : m_triggers) t.fill(iEvent,*m_tree);
   // fill event branches
-  for (auto& t : m_evstrings) t.fill(iEvent,*m_tree);
+  for (auto & t : m_evstrings) t.fill(iEvent,*m_tree);
   m_tree->Fill();
 
   m_processHistoryRegistry.registerProcessHistory(iEvent.processHistory());
@@ -212,6 +212,7 @@ void
 NanoAODOutputModule::writeLuminosityBlock(edm::LuminosityBlockForOutput const& iLumi) {
   edm::Service<edm::JobReport> jr;
   jr->reportLumiSection(m_jrToken, iLumi.id().run(), iLumi.id().value());
+
   m_commonLumiBranches.fill(iLumi.id());
   for (auto & t : m_lumiTables) t.fill(iLumi,*m_lumiTree);
 
