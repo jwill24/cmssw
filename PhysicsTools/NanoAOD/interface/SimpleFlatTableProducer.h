@@ -15,9 +15,9 @@ template<typename T, typename TProd>
 class SimpleFlatTableProducerBase : public edm::stream::EDProducer<> {
     public:
 
-        SimpleFlatTableProducerBase(edm::ParameterSet const &params):
-            name_(params.getParameter<std::string>("name")),
-	    doc_(params.existsAs<std::string>("doc") ? params.getParameter<std::string>("doc") : ""),
+        SimpleFlatTableProducerBase( edm::ParameterSet const & params ):
+            name_( params.getParameter<std::string>("name") ),
+            doc_(params.existsAs<std::string>("doc") ? params.getParameter<std::string>("doc") : ""),
 	    extension_(params.existsAs<bool>("extension") ? params.getParameter<bool>("extension") : false),
 	    skipNonExistingSrc_(params.existsAs<bool>("skipNonExistingSrc") ? params.getParameter<bool>("skipNonExistingSrc") : false),
 	    src_(skipNonExistingSrc_ ? mayConsume<TProd>(params.getParameter<edm::InputTag>("src")) : 
